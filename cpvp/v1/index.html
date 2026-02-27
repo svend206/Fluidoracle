@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CPVP v1 — Component Performance Verification Protocol</title>
+  <meta name="description" content="The Component Performance Verification Protocol (CPVP) is an open standard for tracking real-world component performance after installation in industrial fluid systems." />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --blue-dark:  #1e3a5f;
+      --blue-mid:   #2563eb;
+      --blue-light: #3b82f6;
+      --blue-pale:  #eff6ff;
+      --gray-900:   #111827;
+      --gray-700:   #374151;
+      --gray-500:   #6b7280;
+      --gray-300:   #d1d5db;
+      --gray-100:   #f3f4f6;
+      --white:      #ffffff;
+      --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    html { scroll-behavior: smooth; }
+    body { font-family: var(--sans); color: var(--gray-900); background: var(--white); line-height: 1.7; }
+
+    nav {
+      position: sticky; top: 0; z-index: 10;
+      background: var(--white); border-bottom: 1px solid var(--gray-300);
+      padding: 0 2rem;
+    }
+    .nav-inner {
+      max-width: 860px; margin: 0 auto;
+      display: flex; align-items: center; justify-content: space-between;
+      height: 52px;
+    }
+    .nav-logo {
+      display: flex; align-items: center; gap: 8px;
+      text-decoration: none; color: var(--gray-900); font-size: 0.9rem;
+    }
+    .nav-logo svg { width: 22px; height: 22px; }
+    .nav-logo .sep { color: var(--gray-300); margin: 0 4px; }
+    .nav-logo .current { color: var(--gray-500); font-size: 0.85rem; }
+    .nav-link {
+      font-size: 0.85rem; color: var(--gray-500); text-decoration: none;
+      padding: 0.4rem 0.75rem; border: 1px solid var(--gray-300);
+      border-radius: 6px; transition: all 0.15s;
+    }
+    .nav-link:hover { border-color: var(--blue-light); color: var(--blue-mid); }
+
+    .doc-header {
+      background: var(--blue-dark);
+      color: var(--white);
+      padding: 3.5rem 2rem 3rem;
+    }
+    .doc-header-inner { max-width: 860px; margin: 0 auto; }
+    .doc-meta {
+      display: flex; flex-wrap: wrap; gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    .doc-badge {
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.2);
+      color: #bfdbfe;
+      font-size: 0.75rem; font-weight: 500;
+      padding: 0.25rem 0.65rem; border-radius: 4px;
+    }
+    .doc-title {
+      font-size: clamp(1.5rem, 3vw, 2.25rem);
+      font-weight: 700; letter-spacing: -0.02em;
+      line-height: 1.2; margin-bottom: 1rem;
+    }
+    .doc-subtitle { color: #93c5fd; font-size: 1rem; max-width: 600px; }
+
+    .doc-body {
+      max-width: 860px; margin: 0 auto;
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      gap: 3rem;
+      padding: 3rem 2rem;
+      align-items: start;
+    }
+
+    /* TOC */
+    .toc {
+      position: sticky; top: 72px;
+      font-size: 0.8rem;
+    }
+    .toc-title {
+      font-weight: 700; font-size: 0.7rem;
+      text-transform: uppercase; letter-spacing: 0.08em;
+      color: var(--gray-500); margin-bottom: 0.75rem;
+    }
+    .toc ol { list-style: none; }
+    .toc li { margin-bottom: 0.25rem; }
+    .toc a {
+      text-decoration: none; color: var(--gray-500);
+      transition: color 0.15s; display: block;
+      padding: 0.2rem 0;
+      border-left: 2px solid transparent;
+      padding-left: 0.75rem;
+    }
+    .toc a:hover { color: var(--blue-mid); border-left-color: var(--blue-light); }
+
+    /* Content */
+    .content h2 {
+      font-size: 1.3rem; font-weight: 700;
+      color: var(--blue-dark);
+      margin: 2.5rem 0 0.75rem;
+      padding-top: 0.5rem;
+      border-top: 1px solid var(--gray-300);
+    }
+    .content h2:first-child { margin-top: 0; border-top: none; }
+    .content h3 {
+      font-size: 1rem; font-weight: 600;
+      color: var(--gray-900); margin: 1.5rem 0 0.5rem;
+    }
+    .content p { color: var(--gray-700); margin-bottom: 1rem; font-size: 0.95rem; }
+    .content ul, .content ol {
+      margin: 0.5rem 0 1rem 1.25rem; color: var(--gray-700); font-size: 0.95rem;
+    }
+    .content li { margin-bottom: 0.35rem; }
+    .content strong { color: var(--gray-900); }
+
+    .callout {
+      background: var(--blue-pale);
+      border-left: 3px solid var(--blue-light);
+      border-radius: 0 6px 6px 0;
+      padding: 1rem 1.25rem;
+      margin: 1rem 0 1.5rem;
+    }
+    .callout p { margin-bottom: 0; font-size: 0.9rem; color: var(--blue-dark); }
+
+    .stage-card {
+      border: 1px solid var(--gray-300);
+      border-radius: 8px;
+      overflow: hidden;
+      margin: 1rem 0 1.5rem;
+    }
+    .stage-header {
+      background: var(--gray-100);
+      padding: 0.75rem 1.25rem;
+      display: flex; align-items: center; gap: 0.75rem;
+    }
+    .stage-num {
+      background: var(--blue-dark); color: var(--white);
+      width: 24px; height: 24px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.75rem; font-weight: 700; flex-shrink: 0;
+    }
+    .stage-title { font-weight: 600; font-size: 0.9rem; }
+    .stage-timing { color: var(--gray-500); font-size: 0.8rem; margin-left: auto; }
+    .stage-body { padding: 1rem 1.25rem; font-size: 0.875rem; color: var(--gray-700); }
+    .stage-body ul { margin-left: 1rem; }
+    .stage-body li { margin-bottom: 0.25rem; }
+
+    .key-question {
+      background: var(--blue-dark);
+      color: var(--white);
+      border-radius: 6px;
+      padding: 1rem 1.25rem;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .key-question .kq-label {
+      font-size: 0.7rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.08em;
+      color: #60a5fa; margin-bottom: 0.4rem;
+    }
+    .key-question p { color: var(--white); margin: 0; }
+
+    .principle-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 0.75rem; margin: 0.75rem 0 1rem;
+    }
+    .principle-item {
+      background: var(--gray-100);
+      border-radius: 6px;
+      padding: 0.75rem 1rem;
+      font-size: 0.85rem;
+    }
+    .principle-item strong { display: block; margin-bottom: 0.2rem; color: var(--gray-900); }
+    .principle-item span { color: var(--gray-500); font-size: 0.8rem; }
+
+    footer {
+      border-top: 1px solid var(--gray-300);
+      padding: 2rem; text-align: center;
+      color: var(--gray-500); font-size: 0.8rem;
+    }
+    footer a { color: var(--gray-500); }
+
+    @media (max-width: 700px) {
+      .doc-body { grid-template-columns: 1fr; }
+      .toc { display: none; }
+      .principle-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a href="/" class="nav-logo">
+      <svg viewBox="0 0 32 32" fill="none">
+        <circle cx="16" cy="16" r="14" fill="#1e3a5f" stroke="#3b82f6" stroke-width="2"/>
+        <path d="M16 6 L14 16 L12 26 M16 6 L18 16 L20 26 M16 6 L16 26 M16 6 L10 22 M16 6 L22 22"
+              stroke="#60a5fa" stroke-width="1.5" fill="none" stroke-linecap="round" opacity="0.8"/>
+        <circle cx="16" cy="6" r="2" fill="#93c5fd"/>
+      </svg>
+      <span>FluidOracle</span>
+      <span class="sep">/</span>
+      <span class="current">CPVP v1</span>
+    </a>
+    <a href="https://github.com/svend206/fluidoracle/blob/main/cpvp/v1/index.html" class="nav-link">View on GitHub</a>
+  </div>
+</nav>
+
+<div class="doc-header">
+  <div class="doc-header-inner">
+    <div class="doc-meta">
+      <span class="doc-badge">Version 1.0</span>
+      <span class="doc-badge">Open Standard — CC BY 4.0</span>
+      <span class="doc-badge">Published by FluidOracle</span>
+    </div>
+    <h1 class="doc-title">Component Performance Verification Protocol</h1>
+    <p class="doc-subtitle">
+      A structured framework for capturing real-world industrial component performance
+      data after installation — closing the loop between recommendations and outcomes.
+    </p>
+  </div>
+</div>
+
+<div class="doc-body">
+
+  <!-- TOC -->
+  <aside class="toc">
+    <div class="toc-title">Contents</div>
+    <ol>
+      <li><a href="#problem">The problem</a></li>
+      <li><a href="#what-is-cpvp">What is CPVP</a></li>
+      <li><a href="#principles">Design principles</a></li>
+      <li><a href="#structure">Three-stage structure</a></li>
+      <li><a href="#stage-1">Stage 1 — Installation</a></li>
+      <li><a href="#stage-2">Stage 2 — Performance</a></li>
+      <li><a href="#stage-3">Stage 3 — Service life</a></li>
+      <li><a href="#email">Email requirements</a></li>
+      <li><a href="#data">Data model</a></li>
+      <li><a href="#implementing">Implementing CPVP</a></li>
+      <li><a href="#license">License</a></li>
+    </ol>
+  </aside>
+
+  <!-- Content -->
+  <article class="content">
+
+    <h2 id="problem">The problem</h2>
+    <p>
+      Engineers select industrial components based on manufacturer specifications,
+      application experience, and peer recommendations. When a component fails — or
+      performs better than expected — that information rarely makes it back to the
+      people who recommended it, the engineers who will face the same decision next
+      year, or the manufacturers who need to understand real-world performance gaps.
+    </p>
+    <p>
+      The component selection process is one-directional. Recommendations flow from
+      specifications to engineers. Outcomes flow nowhere.
+    </p>
+    <div class="callout">
+      <p><strong>CPVP closes this loop.</strong> It defines when to follow up, what to ask,
+      how to capture the data, and what to do with it — in a format that works across
+      any component category and any platform that chooses to implement it.</p>
+    </div>
+
+    <h2 id="what-is-cpvp">What is CPVP</h2>
+    <p>
+      The Component Performance Verification Protocol is a structured post-installation
+      follow-up system. It defines three check-in interactions at defined intervals after
+      a component is installed, each capturing progressively deeper performance data.
+    </p>
+    <p>
+      CPVP is designed to be implemented by any platform, organization, or engineering
+      team that makes component recommendations and wants to systematically track outcomes.
+      It is not FluidOracle-specific — it is an open standard published under CC BY 4.0.
+    </p>
+
+    <h2 id="principles">Design principles</h2>
+    <div class="principle-grid">
+      <div class="principle-item">
+        <strong>Engineer-controlled timing</strong>
+        <span>The commissioning clock starts when the engineer confirms installation — not when the recommendation was made.</span>
+      </div>
+      <div class="principle-item">
+        <strong>Conversation, not forms</strong>
+        <span>Check-ins are conversations that adapt to what actually happened, not fixed fields to fill in.</span>
+      </div>
+      <div class="principle-item">
+        <strong>Value during check-in</strong>
+        <span>Each interaction delivers something useful to the engineer — interpretation, projections, advice — not just data extraction.</span>
+      </div>
+      <div class="principle-item">
+        <strong>Partial data is valid</strong>
+        <span>Incomplete check-ins are captured and stored. Partial data is better than no data.</span>
+      </div>
+      <div class="principle-item">
+        <strong>Append-only records</strong>
+        <span>Check-in records are never overwritten. Corrections add dated notes rather than replacing prior data.</span>
+      </div>
+      <div class="principle-item">
+        <strong>Trust by design</strong>
+        <span>Every email references something only the platform would know. The engineer should recognize the follow-up immediately.</span>
+      </div>
+    </div>
+
+    <h2 id="structure">Three-stage structure</h2>
+    <p>
+      CPVP consists of three follow-up interactions. Timing is measured from installation
+      confirmation, not from the original consultation date.
+    </p>
+    <p>
+      Before the three stages, a lightweight <strong>pre-commissioning contact</strong>
+      (48–72 hours after the initial consultation) asks whether the engineer moved forward.
+      This is not a data collection event — it is the natural moment to confirm installation
+      intent and start the commissioning clock. If the engineer confirms installation,
+      Stage 1 follows 24 hours later. If there is no response after a 2-week follow-up,
+      the contact ceases.
+    </p>
+
+    <h2 id="stage-1">Stage 1 — Installation record</h2>
+    <div class="stage-card">
+      <div class="stage-header">
+        <div class="stage-num">1</div>
+        <div class="stage-title">Installation Record</div>
+        <div class="stage-timing">24 hours after installation confirmation</div>
+      </div>
+      <div class="stage-body">
+        <p>Captures installation conditions while they are fresh. The primary purpose is to establish
+        a verified baseline — what was actually installed, under what conditions, with what initial readings.</p>
+        <ul>
+          <li>Confirmation of component actually installed (may differ from recommendation)</li>
+          <li>Initial performance readings at operating conditions (e.g., baseline differential pressure)</li>
+          <li>Condition of replaced component (wear patterns, failure evidence)</li>
+          <li>Any deviations from recommended configuration</li>
+          <li>Baseline fluid or system sample, if taken</li>
+        </ul>
+      </div>
+    </div>
+
+    <h2 id="stage-2">Stage 2 — Performance verification</h2>
+    <div class="stage-card">
+      <div class="stage-header">
+        <div class="stage-num">2</div>
+        <div class="stage-title">Performance Verification</div>
+        <div class="stage-timing">4–6 weeks after installation confirmation</div>
+      </div>
+      <div class="stage-body">
+        <p>Captures early performance data after sufficient operating time to observe real behavior.
+        Performance readings are compared against the Stage 1 baseline to calculate trends and
+        project forward.</p>
+        <ul>
+          <li>Current performance readings compared to Stage 1 baseline</li>
+          <li>Trend and projection (e.g., loading rate, projected service life)</li>
+          <li>Follow-up sample results compared to target specification from original consultation</li>
+          <li>Status of original problem (resolved, improved, unchanged)</li>
+          <li>Any anomalies or unexpected behavior</li>
+        </ul>
+      </div>
+    </div>
+
+    <h2 id="stage-3">Stage 3 — Service life record</h2>
+    <div class="stage-card">
+      <div class="stage-header">
+        <div class="stage-num">3</div>
+        <div class="stage-title">Service Life Record</div>
+        <div class="stage-timing">6–12 months after installation confirmation</div>
+      </div>
+      <div class="stage-body">
+        <p>The highest-value data collection event. Captures long-term reliability, failure modes,
+        and the engineer's holistic judgment on recommendation quality.</p>
+        <ul>
+          <li>Component status: still in service, or replaced (when, why)</li>
+          <li>Total service life if replaced</li>
+          <li>Component condition at end of life</li>
+          <li>Failure mode (from vertical-specific taxonomy)</li>
+          <li>Original problem resolution over the full period</li>
+          <li>Cost impact, if quantifiable</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="key-question">
+      <div class="kq-label">The key question — asked at Stage 3</div>
+      <p>"Knowing what you know now, would you select the same component for this application?"</p>
+    </div>
+    <p>
+      This is the single most valuable data point CPVP captures. It is a holistic judgment
+      that incorporates everything the engineer experienced: installation difficulty, early
+      performance, reliability, cost versus value, manufacturer support. It cannot be inferred
+      from specifications. It can only come from an engineer who lived with the component.
+    </p>
+
+    <h2 id="email">Email requirements</h2>
+    <p>
+      Follow-up emails are the primary interface for most engineers. Every design decision
+      must prioritize deliverability and immediate recognition.
+    </p>
+    <ul>
+      <li><strong>Subject lines must be specific.</strong> Reference the component, application, and system. Not "How's your filter working?" but "Your Pall HC9600 in stamping press HPU — installation check-in." The engineer should recognize it before opening.</li>
+      <li><strong>Email body includes a consultation summary.</strong> Application, component installed, date of consultation, key parameters. Enough to confirm legitimacy without requiring a click.</li>
+      <li><strong>Tokenized links are time-limited, not single-use.</strong> 7-day expiry with a re-authentication fallback. Engineers get interrupted.</li>
+      <li><strong>Plain-text alternative required.</strong> Engineers at industrial facilities often have aggressive email filtering.</li>
+      <li><strong>Unsubscribe in every email.</strong> Required by law and a trust signal.</li>
+      <li><strong>Consistent sender identity.</strong> Sender domain, link domain, and platform name must match. Domain changes reset trust with both email providers and engineers.</li>
+      <li><strong>DKIM, SPF, and DMARC authentication required.</strong> Non-negotiable for industrial email deliverability.</li>
+    </ul>
+    <p>
+      The PDF commissioning report (see Data Model below) is attached to each Stage 1, 2, and 3 email.
+      Engineers can file the PDF in their maintenance system regardless of whether they click through.
+      Maximum value delivery with minimum friction.
+    </p>
+
+    <h2 id="data">Data model</h2>
+    <p>
+      CPVP defines the following minimum data model. Implementing platforms may extend
+      this with vertical-specific fields.
+    </p>
+    <h3>Consultation record</h3>
+    <ul>
+      <li><code>consultation_id</code> — unique identifier</li>
+      <li><code>operating_context</code> — system-level data (fluid, pressure, flow, temperature, application). Shared across verticals for the same physical system.</li>
+      <li><code>recommendation</code> — component recommended, with reasoning and cited sources</li>
+      <li><code>consultation_date</code></li>
+    </ul>
+    <h3>Commissioning record (per stage)</h3>
+    <ul>
+      <li><code>stage</code> — installation | performance | service_life</li>
+      <li><code>stage_date</code></li>
+      <li><code>component_installed</code> — confirmed at Stage 1; may differ from recommendation</li>
+      <li><code>implementation_status</code> — implemented | modified | not_implemented | pending</li>
+      <li><code>performance_readings</code> — vertical-specific measurements (extensible)</li>
+      <li><code>baseline_reading</code> — Stage 1 reference value for trend calculation</li>
+      <li><code>problem_resolution_status</code> — resolved | improved | unchanged | worsened</li>
+      <li><code>failure_occurred</code> — boolean</li>
+      <li><code>failure_mode</code> — from vertical-specific taxonomy</li>
+      <li><code>would_select_again</code> — yes | no | uncertain (Stage 3 only)</li>
+      <li><code>additional_notes</code> — free text</li>
+      <li><code>corrections</code> — append-only list of dated corrections to prior stage data</li>
+    </ul>
+    <h3>Commissioning report (PDF)</h3>
+    <p>
+      A single PDF document that grows with each check-in. Sections are added at each stage;
+      prior sections are never overwritten. Corrections appear as dated addenda.
+      The report is generated at the close of each check-in conversation and attached to
+      subsequent check-in emails.
+    </p>
+
+    <h2 id="implementing">Implementing CPVP</h2>
+    <p>
+      CPVP is designed to work across any component category. Implementing platforms register
+      vertical-specific configuration — check-in parameters, performance metrics, failure mode
+      taxonomies — and the shared protocol infrastructure handles scheduling, email delivery,
+      conversation flow, and PDF generation.
+    </p>
+    <p>
+      The minimum requirements for a compliant CPVP implementation:
+    </p>
+    <ul>
+      <li>Three check-in stages at the specified intervals, triggered by installation confirmation</li>
+      <li>Append-only records with dated corrections</li>
+      <li>Email trust requirements met (specificity, authentication, unsubscribe)</li>
+      <li>The key Stage 3 question asked and recorded</li>
+      <li>A PDF commissioning report delivered to the engineer at each stage</li>
+    </ul>
+    <p>
+      Questions about implementing CPVP: <a href="mailto:checkins@fluidoracle.com">checkins@fluidoracle.com</a>
+    </p>
+
+    <h2 id="license">License</h2>
+    <p>
+      The Component Performance Verification Protocol is published under the
+      <a href="https://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution 4.0 International License</a> (CC BY 4.0).
+    </p>
+    <p>
+      You are free to use, adapt, and implement this protocol in any context, commercial or non-commercial,
+      provided you attribute FluidOracle as the source.
+    </p>
+    <p style="color: var(--gray-500); font-size: 0.85rem;">
+      Canonical URL: <code>https://fluidoracle.com/cpvp/v1/</code><br/>
+      Published: 2026 &middot; FluidOracle
+    </p>
+
+  </article>
+</div>
+
+<footer>
+  <p>
+    FluidOracle &mdash; Component Performance Verification Protocol v1
+    &nbsp;&middot;&nbsp;
+    <a href="/">fluidoracle.com</a>
+    &nbsp;&middot;&nbsp;
+    CC BY 4.0
+  </p>
+</footer>
+
+</body>
+</html>
