@@ -211,7 +211,7 @@
       <span class="sep">/</span>
       <span class="current">CPVP v1</span>
     </a>
-    <a href="https://github.com/svend206/fluidoracle/blob/main/cpvp/v1/index.html" class="nav-link">View on GitHub</a>
+    <a href="https://github.com/svend206/Fluidoracle/blob/main/cpvp/v1/index.html" class="nav-link">View on GitHub</a>
   </div>
 </nav>
 
@@ -245,6 +245,7 @@
       <li><a href="#stage-3">Stage 3 — Service life</a></li>
       <li><a href="#email">Email requirements</a></li>
       <li><a href="#data">Data model</a></li>
+      <li><a href="#example">Worked example</a></li>
       <li><a href="#implementing">Implementing CPVP</a></li>
       <li><a href="#license">License</a></li>
     </ol>
@@ -255,15 +256,30 @@
 
     <h2 id="problem">The problem</h2>
     <p>
-      Engineers select industrial components based on manufacturer specifications,
-      application experience, and peer recommendations. When a component fails — or
-      performs better than expected — that information rarely makes it back to the
-      people who recommended it, the engineers who will face the same decision next
-      year, or the manufacturers who need to understand real-world performance gaps.
+      Engineers select industrial fluid system components based on manufacturer data sheets,
+      application experience, and peer recommendations. These inputs describe how a component
+      is expected to behave in a laboratory test or an idealized installation. They do not
+      describe how a specific component behaves in a specific system, under actual operating
+      conditions, maintained by actual people, over months of real service.
+    </p>
+    <p>
+      When a component fails prematurely, or lasts twice as long as expected, or resolves
+      a contamination problem that three other components failed to fix — that information
+      exists. It lives in the maintenance log, in the engineer's memory, in the oil sample
+      report filed in a cabinet. It almost never makes it back to the people who made the
+      recommendation, the engineers facing the same decision next year, or the manufacturers
+      who designed the component.
     </p>
     <p>
       The component selection process is one-directional. Recommendations flow from
       specifications to engineers. Outcomes flow nowhere.
+    </p>
+    <p>
+      This is not a minor gap. It means that the collective experience of thousands of
+      engineers — hard-won knowledge about what actually works in mining hydraulics, wind
+      turbine gearboxes, cold-climate equipment, high-cycle stamping presses — dissipates
+      when those engineers change jobs, retire, or simply move on to the next problem.
+      Every subsequent engineer starts over.
     </p>
     <div class="callout">
       <p><strong>CPVP closes this loop.</strong> It defines when to follow up, what to ask,
@@ -451,6 +467,108 @@
       prior sections are never overwritten. Corrections appear as dated addenda.
       The report is generated at the close of each check-in conversation and attached to
       subsequent check-in emails.
+    </p>
+
+    <h2 id="example">Worked example</h2>
+    <p>
+      The following example illustrates a full CPVP cycle for a hydraulic filter installation.
+      The application is real; identifying details have been generalized.
+    </p>
+
+    <h3>Consultation context</h3>
+    <p>
+      A maintenance engineer at a metal stamping facility contacts FilterOracle with a contamination
+      problem. The stamping press hydraulic power unit is experiencing premature valve wear and
+      servo control drift. Oil analysis shows ISO 4406 cleanliness at 22/20/17 — far above the
+      OEM requirement of 17/15/12. The system runs 20 GPM at 3,000 PSI on HM46 hydraulic oil.
+    </p>
+    <p>
+      FilterOracle recommends upgrading the return-line filter to a Pall HC9600 series with
+      a 6 µm(c) element, sized at 30 GPM (1.5× system flow for cold-start headroom), with
+      a bypass indicator to signal element saturation.
+    </p>
+
+    <h3>Pre-commissioning contact (48–72 hours later)</h3>
+    <p>
+      Email subject: <em>"Your FilterOracle consultation — did you move forward with the Pall HC9600?"</em>
+    </p>
+    <p>
+      The engineer replies that the element is on order. Delivery expected in two weeks.
+      No commissioning clock started yet.
+    </p>
+    <p>
+      A follow-up is scheduled for two weeks out. When the engineer replies to that email
+      confirming installation, the commissioning clock starts. Stage 1 is triggered for the
+      following day.
+    </p>
+
+    <h3>Stage 1 — Installation record (24 hours after confirmation)</h3>
+    <p>
+      Email subject: <em>"Your Pall HC9600 installation — quick baseline check-in (stamping press HPU)"</em>
+    </p>
+    <p>
+      The conversation confirms: Pall HC9600FUN16 installed as recommended. Baseline clean
+      differential pressure: 12 PSI at operating temperature and flow. Replaced element was
+      found heavily loaded with metallic fines — consistent with the wear pattern reported.
+      No deviations from recommended configuration.
+    </p>
+    <p>
+      A PDF commissioning report is generated and attached to the Stage 2 invitation email.
+      Section 1 of the report: component installed, baseline ΔP, element condition found,
+      date of installation, system parameters.
+    </p>
+
+    <h3>Stage 2 — Performance verification (5 weeks later)</h3>
+    <p>
+      Email subject: <em>"5-week check-in: Pall HC9600 — stamping press HPU, [Facility]"</em>
+    </p>
+    <p>
+      Current ΔP: 18 PSI. Loading rate: ~1.2 PSI/week from baseline. At this rate, the bypass
+      indicator (typically set at 50 PSI for this housing) would trigger at approximately
+      week 32 from installation — about 7 months of service life before first element change.
+    </p>
+    <p>
+      Oil sample results returned since Stage 1: cleanliness now at 17/15/11 — below the OEM
+      target. Servo drift has resolved. Valve wear rate has not been re-assessed yet but
+      no new failures since installation.
+    </p>
+    <p>
+      The PDF report gains Section 2: ΔP trend, projected service life, fluid cleanliness
+      comparison, problem status update.
+    </p>
+
+    <h3>Stage 3 — Service life record (8 months later)</h3>
+    <p>
+      Email subject: <em>"8-month check-in: Pall HC9600 — stamping press HPU, [Facility]"</em>
+    </p>
+    <p>
+      Element was changed at week 34 (ΔP reached bypass indicator threshold). Total service
+      life: 34 weeks. Element condition at removal: normal loading, no channeling or bypass
+      damage. Fluid cleanliness has been maintained at 17/15/12 throughout the period.
+      No servo-related maintenance events in 8 months, compared to two valve replacements
+      in the prior 8-month period.
+    </p>
+
+    <div class="key-question">
+      <div class="kq-label">The key question</div>
+      <p>"Knowing what you know now, would you select the same component for this application?"</p>
+    </div>
+
+    <p>
+      Engineer response: <em>"Yes. The 6-micron rating was right for this system — we were
+      skeptical it wouldn't blind too fast but 34 weeks was actually better than our old 10-micron
+      element. The cleanliness results speak for themselves."</em>
+    </p>
+    <p>
+      The completed PDF commissioning report — covering all three stages, with cleanliness
+      data, trend analysis, and the engineer's own judgment — is attached. The engineer can
+      file it directly in the maintenance management system as a documented record of the
+      remediation project.
+    </p>
+    <p>
+      This data, aggregated across installations, builds a body of evidence that no
+      manufacturer specification sheet can replicate: real engineers, real systems,
+      real outcomes.
     </p>
 
     <h2 id="implementing">Implementing CPVP</h2>
