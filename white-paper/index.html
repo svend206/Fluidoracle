@@ -1,0 +1,1033 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Closing the Loop: A Framework for Post-Installation Outcome Tracking in Industrial Fluid Systems — FluidOracle White Paper</title>
+  <meta name="description" content="The Component Performance Verification Protocol (CPVP) — a structured framework for capturing real-world component performance data after installation. Published by FluidOracle." />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --blue-dark:  #1e3a5f;
+      --blue-mid:   #2563eb;
+      --blue-light: #3b82f6;
+      --blue-pale:  #eff6ff;
+      --gray-900:   #111827;
+      --gray-700:   #374151;
+      --gray-500:   #6b7280;
+      --gray-300:   #d1d5db;
+      --gray-100:   #f3f4f6;
+      --white:      #ffffff;
+      --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --serif: Georgia, 'Times New Roman', serif;
+    }
+    html { scroll-behavior: smooth; }
+    body { font-family: var(--serif); color: var(--gray-900); background: var(--white); line-height: 1.8; }
+
+    /* Nav */
+    nav {
+      position: sticky; top: 0; z-index: 10;
+      background: var(--white); border-bottom: 1px solid var(--gray-300);
+      padding: 0 2rem; font-family: var(--sans);
+    }
+    .nav-inner {
+      max-width: 860px; margin: 0 auto;
+      display: flex; align-items: center; justify-content: space-between;
+      height: 52px;
+    }
+    .nav-logo {
+      display: flex; align-items: center; gap: 8px;
+      text-decoration: none; color: var(--gray-900); font-size: 0.9rem;
+    }
+    .nav-logo svg { width: 22px; height: 22px; }
+    .nav-logo .sep { color: var(--gray-300); margin: 0 4px; }
+    .nav-logo .current { color: var(--gray-500); font-size: 0.85rem; }
+    .nav-actions { display: flex; gap: 0.75rem; align-items: center; }
+    .nav-link {
+      font-size: 0.8rem; color: var(--gray-500); text-decoration: none;
+      padding: 0.35rem 0.75rem; border: 1px solid var(--gray-300);
+      border-radius: 5px; transition: all 0.15s; font-family: var(--sans);
+    }
+    .nav-link:hover { border-color: var(--blue-light); color: var(--blue-mid); }
+    .nav-link.primary {
+      background: var(--blue-dark); color: var(--white); border-color: var(--blue-dark);
+    }
+    .nav-link.primary:hover { background: var(--blue-mid); border-color: var(--blue-mid); }
+
+    /* Cover */
+    .cover {
+      background: var(--blue-dark);
+      color: var(--white);
+      padding: 5rem 2rem 4rem;
+    }
+    .cover-inner { max-width: 740px; margin: 0 auto; }
+    .cover-label {
+      font-family: var(--sans);
+      font-size: 0.7rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.12em;
+      color: #60a5fa; margin-bottom: 1.25rem;
+    }
+    .cover h1 {
+      font-size: clamp(1.6rem, 3.5vw, 2.5rem);
+      font-weight: 700; line-height: 1.2;
+      letter-spacing: -0.02em; margin-bottom: 1rem;
+    }
+    .cover .subtitle {
+      font-size: 1.1rem; color: #93c5fd;
+      margin-bottom: 2rem; font-style: italic;
+    }
+    .cover-meta {
+      font-family: var(--sans);
+      display: flex; flex-wrap: wrap; gap: 1.5rem;
+      font-size: 0.82rem; color: #bfdbfe;
+      border-top: 1px solid rgba(255,255,255,0.15);
+      padding-top: 1.5rem; margin-top: 2rem;
+    }
+    .cover-meta strong { color: var(--white); }
+
+    /* Layout */
+    .doc-body {
+      max-width: 860px; margin: 0 auto;
+      display: grid;
+      grid-template-columns: 200px 1fr;
+      gap: 4rem;
+      padding: 4rem 2rem;
+      align-items: start;
+    }
+
+    /* TOC */
+    .toc {
+      position: sticky; top: 72px;
+      font-family: var(--sans); font-size: 0.78rem;
+    }
+    .toc-title {
+      font-weight: 700; font-size: 0.68rem;
+      text-transform: uppercase; letter-spacing: 0.1em;
+      color: var(--gray-500); margin-bottom: 0.75rem;
+    }
+    .toc ol { list-style: none; counter-reset: toc-counter; }
+    .toc > ol > li { counter-increment: toc-counter; }
+    .toc a {
+      text-decoration: none; color: var(--gray-500);
+      display: block; padding: 0.2rem 0 0.2rem 0.75rem;
+      border-left: 2px solid transparent;
+      transition: all 0.15s; line-height: 1.4;
+    }
+    .toc a:hover { color: var(--blue-mid); border-left-color: var(--blue-light); }
+    .toc li { margin-bottom: 0.1rem; }
+
+    /* Content */
+    .content { min-width: 0; }
+
+    .abstract {
+      background: var(--blue-pale);
+      border-left: 3px solid var(--blue-light);
+      border-radius: 0 8px 8px 0;
+      padding: 1.5rem 1.75rem;
+      margin-bottom: 3rem;
+    }
+    .abstract-label {
+      font-family: var(--sans);
+      font-size: 0.68rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.1em;
+      color: var(--blue-mid); margin-bottom: 0.75rem;
+    }
+    .abstract p {
+      font-size: 0.95rem; color: var(--blue-dark);
+      margin-bottom: 0.75rem; line-height: 1.7;
+    }
+    .abstract p:last-child { margin-bottom: 0; }
+
+    h2 {
+      font-family: var(--sans);
+      font-size: 1.25rem; font-weight: 700;
+      color: var(--blue-dark);
+      margin: 3rem 0 1rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--gray-300);
+      letter-spacing: -0.01em;
+    }
+    h2:first-of-type { margin-top: 0; border-top: none; padding-top: 0; }
+
+    h3 {
+      font-family: var(--sans);
+      font-size: 1rem; font-weight: 600;
+      color: var(--gray-900);
+      margin: 2rem 0 0.6rem;
+    }
+
+    p { margin-bottom: 1.1rem; font-size: 0.975rem; color: var(--gray-700); }
+    p:last-child { margin-bottom: 0; }
+
+    ul, ol { margin: 0.5rem 0 1.25rem 1.5rem; color: var(--gray-700); }
+    li { margin-bottom: 0.4rem; font-size: 0.975rem; }
+
+    strong { color: var(--gray-900); }
+    em { font-style: italic; }
+
+    /* Pull quote */
+    blockquote {
+      border-left: 3px solid var(--blue-light);
+      padding: 0.75rem 0 0.75rem 1.5rem;
+      margin: 1.5rem 0;
+      color: var(--blue-dark);
+      font-size: 1.05rem;
+      font-style: italic;
+    }
+    blockquote cite {
+      display: block; margin-top: 0.5rem;
+      font-size: 0.8rem; font-style: normal;
+      font-family: var(--sans); color: var(--gray-500);
+    }
+
+    /* Scenario box */
+    .scenario {
+      border: 1px solid var(--gray-300);
+      border-radius: 8px; overflow: hidden;
+      margin: 1.5rem 0;
+    }
+    .scenario-header {
+      background: var(--gray-900);
+      color: var(--white);
+      padding: 0.75rem 1.25rem;
+      font-family: var(--sans); font-size: 0.8rem; font-weight: 600;
+      display: flex; align-items: center; gap: 0.5rem;
+    }
+    .scenario-header .badge {
+      background: rgba(255,255,255,0.12);
+      color: #93c5fd; font-size: 0.7rem;
+      padding: 0.15rem 0.5rem; border-radius: 3px;
+    }
+    .scenario-body {
+      padding: 1.25rem 1.5rem;
+      background: var(--gray-100);
+    }
+    .scenario-body p { font-size: 0.9rem; color: var(--gray-700); margin-bottom: 0.75rem; }
+    .scenario-body p:last-child { margin-bottom: 0; }
+    .scenario-exchange {
+      background: var(--white);
+      border: 1px solid var(--gray-300);
+      border-radius: 6px;
+      padding: 1rem 1.25rem;
+      margin: 0.75rem 0;
+      font-size: 0.875rem;
+    }
+    .scenario-exchange .speaker {
+      font-family: var(--sans); font-weight: 700; font-size: 0.72rem;
+      text-transform: uppercase; letter-spacing: 0.08em;
+      margin-bottom: 0.4rem;
+    }
+    .scenario-exchange .speaker.ai { color: var(--blue-mid); }
+    .scenario-exchange .speaker.eng { color: var(--gray-500); }
+    .scenario-exchange p { font-size: 0.875rem; color: var(--gray-700); margin: 0; }
+
+    /* Stage table */
+    .stage-table {
+      width: 100%; border-collapse: collapse;
+      margin: 1rem 0 1.5rem;
+      font-family: var(--sans); font-size: 0.85rem;
+    }
+    .stage-table th {
+      background: var(--blue-dark); color: var(--white);
+      padding: 0.6rem 0.875rem; text-align: left; font-weight: 600;
+    }
+    .stage-table td {
+      padding: 0.6rem 0.875rem; border-bottom: 1px solid var(--gray-300);
+      vertical-align: top; color: var(--gray-700);
+    }
+    .stage-table tr:last-child td { border-bottom: none; }
+    .stage-table tr:nth-child(even) td { background: var(--gray-100); }
+
+    /* Data callout */
+    .data-point {
+      background: var(--blue-dark); color: var(--white);
+      border-radius: 8px; padding: 1.5rem 1.75rem;
+      margin: 1.5rem 0;
+      font-family: var(--sans);
+    }
+    .data-point .dp-num {
+      font-size: 2.5rem; font-weight: 800;
+      color: #60a5fa; line-height: 1; margin-bottom: 0.35rem;
+    }
+    .data-point .dp-label { font-size: 0.9rem; color: #bfdbfe; }
+
+    .data-points-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 1rem; margin: 1.5rem 0;
+    }
+
+    /* Principles */
+    .principles-list { list-style: none; margin: 0.75rem 0 1.25rem; }
+    .principles-list li {
+      padding: 0.6rem 0;
+      border-bottom: 1px solid var(--gray-300);
+      display: flex; gap: 0.75rem; align-items: baseline;
+    }
+    .principles-list li:last-child { border-bottom: none; }
+    .principles-list .p-name {
+      font-family: var(--sans); font-weight: 600; font-size: 0.875rem;
+      color: var(--gray-900); min-width: 180px; flex-shrink: 0;
+    }
+    .principles-list .p-desc { font-size: 0.875rem; color: var(--gray-500); }
+
+    /* Key question */
+    .key-question {
+      background: var(--blue-dark); color: var(--white);
+      border-radius: 8px; padding: 1.75rem 2rem;
+      margin: 2rem 0; text-align: center;
+    }
+    .kq-label {
+      font-family: var(--sans); font-size: 0.68rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.12em;
+      color: #60a5fa; margin-bottom: 0.75rem;
+    }
+    .kq-text {
+      font-size: 1.2rem; font-style: italic; color: var(--white);
+      max-width: 560px; margin: 0 auto; line-height: 1.5;
+    }
+
+    /* Footer */
+    .doc-footer {
+      border-top: 2px solid var(--gray-300);
+      padding: 2rem 0 0;
+      margin-top: 3rem;
+    }
+    .doc-footer p { font-size: 0.85rem; color: var(--gray-500); margin-bottom: 0.5rem; }
+    .doc-footer a { color: var(--blue-mid); }
+
+    footer {
+      border-top: 1px solid var(--gray-300);
+      padding: 2rem; text-align: center;
+      color: var(--gray-500); font-size: 0.8rem;
+      font-family: var(--sans);
+    }
+    footer a { color: var(--gray-500); }
+
+    @media print {
+      nav { display: none; }
+      .toc { display: none; }
+      .doc-body { grid-template-columns: 1fr; }
+      .cover { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    }
+
+    @media (max-width: 700px) {
+      .doc-body { grid-template-columns: 1fr; gap: 2rem; }
+      .toc { display: none; }
+      .data-points-grid { grid-template-columns: 1fr; }
+      .principles-list .p-name { min-width: 130px; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a href="/" class="nav-logo">
+      <svg viewBox="0 0 32 32" fill="none">
+        <circle cx="16" cy="16" r="14" fill="#1e3a5f" stroke="#3b82f6" stroke-width="2"/>
+        <path d="M16 6 L14 16 L12 26 M16 6 L18 16 L20 26 M16 6 L16 26 M16 6 L10 22 M16 6 L22 22"
+              stroke="#60a5fa" stroke-width="1.5" fill="none" stroke-linecap="round" opacity="0.8"/>
+        <circle cx="16" cy="6" r="2" fill="#93c5fd"/>
+      </svg>
+      <span>FluidOracle</span>
+      <span class="sep">/</span>
+      <span class="current">White Paper</span>
+    </a>
+    <div class="nav-actions">
+      <a href="/cpvp/v1/" class="nav-link">CPVP v1 Spec</a>
+      <a href="/" class="nav-link primary">fluidoracle.com</a>
+    </div>
+  </div>
+</nav>
+
+<!-- Cover -->
+<div class="cover">
+  <div class="cover-inner">
+    <div class="cover-label">White Paper — FluidOracle</div>
+    <h1>Closing the Loop: A Framework for Post-Installation Outcome Tracking in Industrial Fluid Systems</h1>
+    <p class="subtitle">Introducing the Component Performance Verification Protocol (CPVP v1)</p>
+    <div class="cover-meta">
+      <span><strong>Published by</strong> FluidOracle</span>
+      <span><strong>Version</strong> 1.0</span>
+      <span><strong>Year</strong> 2026</span>
+      <span><strong>License</strong> CC BY 4.0</span>
+      <span><strong>Canonical URL</strong> fluidoracle.com/cpvp/v1/</span>
+    </div>
+  </div>
+</div>
+
+<!-- Body -->
+<div class="doc-body">
+
+  <!-- TOC -->
+  <aside class="toc">
+    <div class="toc-title">Contents</div>
+    <ol>
+      <li><a href="#abstract">Abstract</a></li>
+      <li><a href="#problem">The problem</a></li>
+      <li><a href="#cost">The cost of silence</a></li>
+      <li><a href="#what">What CPVP is</a></li>
+      <li><a href="#principles">Design principles</a></li>
+      <li><a href="#protocol">The protocol</a></li>
+      <li><a href="#scenario">Reference scenario</a></li>
+      <li><a href="#email">Email and trust</a></li>
+      <li><a href="#data">The data model</a></li>
+      <li><a href="#compounding">Compounding value</a></li>
+      <li><a href="#implementing">Implementing CPVP</a></li>
+      <li><a href="#conclusion">Conclusion</a></li>
+      <li><a href="#about">About FluidOracle</a></li>
+    </ol>
+  </aside>
+
+  <!-- Content -->
+  <article class="content">
+
+    <!-- Abstract -->
+    <div class="abstract" id="abstract">
+      <div class="abstract-label">Abstract</div>
+      <p>
+        Engineers who select industrial fluid-path components — filters, pumps, valves, seals — make
+        decisions under uncertainty. Manufacturer specifications describe performance under controlled
+        test conditions. Real installations are not controlled. Pressure spikes, fluid degradation,
+        cold starts, contaminated new oil, and maintenance gaps create conditions that specifications
+        cannot fully predict.
+      </p>
+      <p>
+        When components perform differently than expected — for better or worse — that information
+        almost never returns to the people who recommended them, the engineers who will face the
+        same decision next year, or the manufacturers who could address real-world performance gaps.
+        The selection process is one-directional. Recommendations flow from specifications to engineers.
+        Outcomes flow nowhere.
+      </p>
+      <p>
+        This paper introduces the <strong>Component Performance Verification Protocol (CPVP)</strong> —
+        a structured framework for capturing post-installation outcome data through three follow-up
+        interactions at defined intervals. CPVP is designed as an open standard: any platform,
+        organization, or engineering team that makes component recommendations can implement it.
+        The specification is published at <strong>fluidoracle.com/cpvp/v1/</strong> under CC BY 4.0.
+      </p>
+    </div>
+
+    <!-- 1. The Problem -->
+    <h2 id="problem">1. The problem</h2>
+
+    <p>
+      The industrial component selection process has a structural information gap.
+      An engineer selects a hydraulic filter, a centrifugal pump, or a shaft seal based on
+      available data: manufacturer catalogs, application guidelines, engineering standards,
+      and the accumulated experience of colleagues. The selection is made, the component is
+      installed, and the system runs.
+    </p>
+    <p>
+      Three months later, the filter element collapses during a cold start. Or the pump
+      cavitates at a flow rate within its rated range. Or, more often, everything works exactly
+      as expected — and the engineer has no mechanism to report that either.
+    </p>
+    <p>
+      Neither outcome propagates. The engineer who made the selection doesn't know what happened
+      unless they personally follow up. The manufacturer whose product was specified doesn't know
+      whether the installation was a success. The engineer at a different plant facing the same
+      selection problem next year starts from the same place: specifications, guidelines, and
+      whatever their colleagues happen to remember.
+    </p>
+
+    <blockquote>
+      "A 55-gallon barrel of hydraulic oil contaminated with 500 milligrams of dust — the size
+      of a single aspirin tablet — will not pass ISO cleanliness requirements for most hydraulic
+      systems."
+      <cite>— Schroeder Industries, Hydraulic Filtration Reference Guide</cite>
+    </blockquote>
+
+    <p>
+      Engineers understand this. They learn, over years of experience, which specifications
+      are conservative, which manufacturers' claims hold up in practice, and which applications
+      require more margin than the data suggests. But that knowledge lives in people, not systems.
+      It transfers imperfectly through mentorship and not at all across organizational boundaries.
+    </p>
+    <p>
+      The information exists — in the collective experience of the engineers who lived with
+      the components. It is simply never collected.
+    </p>
+
+    <!-- 2. The cost -->
+    <h2 id="cost">2. The cost of silence</h2>
+
+    <p>
+      The consequences of this information gap are distributed and easy to miss in any
+      single instance, but substantial in aggregate.
+    </p>
+
+    <h3>Recommendations without feedback loops</h3>
+    <p>
+      A recommendation that cannot be validated against outcomes cannot improve.
+      Without outcome data, the same selection logic is applied indefinitely — including
+      the same systematic errors. An AI platform trained on manufacturer specifications
+      will reproduce manufacturer specification optimism unless grounded in real-world
+      performance data.
+    </p>
+
+    <h3>Preventable repeat failures</h3>
+    <p>
+      Most component failures have identifiable root causes: under-specified filtration,
+      insufficient collapse pressure margin, fluid incompatibility, cold-start conditions
+      that exceed element ratings. When these failures are not captured in a structured way,
+      the same failure recurs — sometimes at the same facility, sometimes across an industry.
+    </p>
+
+    <h3>Lost engineering knowledge</h3>
+    <p>
+      Senior engineers retire carrying decades of application-specific component experience.
+      A maintenance engineer who has run the same hydraulic system for fifteen years knows
+      exactly which filter elements hold up and which ones don't — in their specific
+      contamination environment, with their specific fluid, under their specific operating
+      cycle. None of this is in any specification. When that engineer leaves, the knowledge
+      leaves with them.
+    </p>
+
+    <h3>Manufacturer accountability gaps</h3>
+    <p>
+      When performance claims cannot be validated against real-world outcomes, the market
+      cannot efficiently distinguish manufacturers whose products perform as specified from
+      those whose products do not. The result is pressure on price rather than performance —
+      a well-documented dynamic in markets with high information asymmetry.
+    </p>
+
+    <!-- 3. What CPVP Is -->
+    <h2 id="what">3. What CPVP is</h2>
+
+    <p>
+      The Component Performance Verification Protocol is a structured post-installation
+      follow-up system. It defines <strong>three check-in interactions</strong> at defined
+      intervals after a component is installed, each capturing progressively deeper
+      performance data through conversation rather than forms.
+    </p>
+    <p>
+      CPVP is not a warranty program, a failure reporting system, or a customer satisfaction
+      survey. It is an outcome tracking infrastructure — designed to capture what actually
+      happened, grounded in the specific operating context of each installation, in a format
+      that is useful to the engineer, not just the platform.
+    </p>
+    <p>
+      Two design decisions distinguish CPVP from conventional feedback systems:
+    </p>
+    <p>
+      <strong>Engineer-controlled timing.</strong> The commissioning clock starts when the
+      engineer confirms installation — not when the recommendation was made. An engineer who
+      reviews a recommendation but doesn't act for six weeks is not behind schedule. The protocol
+      tracks the component lifecycle, not the consultation date.
+    </p>
+    <p>
+      <strong>Conversation, not forms.</strong> Each check-in is a conversation that picks up
+      where the original consultation left off. The system knows what was recommended, why it
+      was recommended, and what operating conditions were described. The engineer does not need
+      to re-explain their system. The conversation can probe intelligently based on actual
+      responses, deliver interpretation and value in real time, and capture information the
+      engineer volunteers that no form would have thought to ask.
+    </p>
+
+    <!-- 4. Design Principles -->
+    <h2 id="principles">4. Design principles</h2>
+
+    <ul class="principles-list">
+      <li>
+        <span class="p-name">Engineer-controlled timing</span>
+        <span class="p-desc">The commissioning clock starts at installation confirmation, not at consultation. The protocol tracks component lifecycle, not calendar time from recommendation.</span>
+      </li>
+      <li>
+        <span class="p-name">Conversation over forms</span>
+        <span class="p-desc">Check-ins are conversations that adapt to what actually happened. A form with a wrong field fails silently. A conversation fails loudly and productively.</span>
+      </li>
+      <li>
+        <span class="p-name">Value during check-in</span>
+        <span class="p-desc">Each check-in delivers something useful to the engineer — interpretation of readings, trend projections, contextual advice. Data collection is a byproduct of a useful interaction, not the interaction itself.</span>
+      </li>
+      <li>
+        <span class="p-name">Minimum quality bar</span>
+        <span class="p-desc">A CPVP check-in must be better than a fresh conversation with no context. The grounding in the specific consultation record — operating conditions, component selected, reasoning — achieves this bar before asking a single question.</span>
+      </li>
+      <li>
+        <span class="p-name">Partial data is valid</span>
+        <span class="p-desc">Incomplete check-ins are captured and stored. An engineer who answers two questions and stops has contributed more than one who never responded. Partial data is better than no data.</span>
+      </li>
+      <li>
+        <span class="p-name">Append-only records</span>
+        <span class="p-desc">Check-in records are never overwritten. Corrections add dated notes to prior stage data rather than replacing it. The historical record is preserved.</span>
+      </li>
+      <li>
+        <span class="p-name">Trust by design</span>
+        <span class="p-desc">Every follow-up email must reference something only the platform would know. The engineer should recognize the follow-up immediately, before opening it.</span>
+      </li>
+      <li>
+        <span class="p-name">PDF as primary deliverable</span>
+        <span class="p-desc">Each check-in produces a professional commissioning report the engineer can file, share with plant management, or attach to a work order. Value delivery is not contingent on the engineer clicking through.</span>
+      </li>
+    </ul>
+
+    <!-- 5. The Protocol -->
+    <h2 id="protocol">5. The protocol</h2>
+
+    <p>
+      Before the three main stages, a lightweight <strong>pre-commissioning contact</strong>
+      is sent 48–72 hours after the initial consultation. Its purpose is not data collection —
+      it is to maintain the thread and let the engineer self-select into the commissioning track.
+      It acknowledges the consultation, references the specific recommendation, and asks simply
+      whether the engineer moved forward. If the engineer confirms installation, the commissioning
+      clock starts. If there is no response after a two-week follow-up, contact ceases.
+      The protocol does not become noise.
+    </p>
+
+    <table class="stage-table">
+      <thead>
+        <tr>
+          <th>Stage</th>
+          <th>Timing</th>
+          <th>Purpose</th>
+          <th>Primary data</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>0 — Pre-commissioning</strong></td>
+          <td>48–72 hours post-consultation</td>
+          <td>Confirm installation intent; start commissioning clock</td>
+          <td>Installation confirmation date</td>
+        </tr>
+        <tr>
+          <td><strong>1 — Installation Record</strong></td>
+          <td>24 hours post-installation</td>
+          <td>Capture installation baseline while fresh</td>
+          <td>Component installed, initial performance readings, old component condition</td>
+        </tr>
+        <tr>
+          <td><strong>2 — Performance Verification</strong></td>
+          <td>4–6 weeks post-installation</td>
+          <td>Capture early performance with trend data</td>
+          <td>Current readings vs. baseline, problem resolution status, anomalies</td>
+        </tr>
+        <tr>
+          <td><strong>3 — Service Life Record</strong></td>
+          <td>6–12 months post-installation</td>
+          <td>Capture long-term reliability and the key judgment</td>
+          <td>Total service life, failure mode, original problem resolution, would-select-again</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p>
+      For non-responding engineers at Stages 1, 2, and 3: one gentle follow-up after one week,
+      then silence. Non-response is recorded as a data point — useful for understanding
+      engagement rates and participation patterns across application types and industries.
+    </p>
+
+    <div class="key-question" id="key-question">
+      <div class="kq-label">The key question — Stage 3</div>
+      <div class="kq-text">"Knowing what you know now, would you select the same component for this application?"</div>
+    </div>
+
+    <p>
+      This question, asked at Stage 3, is the single most valuable data point CPVP captures.
+      It is a holistic judgment that incorporates everything the engineer experienced: installation
+      difficulty, initial performance, reliability, cost against value, manufacturer support, and
+      how well the component held up against conditions that may have differed from what was described
+      in the original consultation. It cannot be inferred from specifications. It can only come from
+      an engineer who lived with the component.
+    </p>
+
+    <!-- 6. Reference Scenario -->
+    <h2 id="scenario">6. Reference scenario: hydraulic filtration</h2>
+
+    <p>
+      The following scenario illustrates a complete CPVP interaction for a hydraulic filtration
+      application. The application is composite, drawn from real maintenance engineering contexts.
+    </p>
+
+    <div class="scenario">
+      <div class="scenario-header">
+        <span>Application context</span>
+        <span class="badge">Hydraulic filtration</span>
+      </div>
+      <div class="scenario-body">
+        <p><strong>System:</strong> Hydraulic power unit, automotive parts stamping press, 60-gallon reservoir</p>
+        <p><strong>Problem:</strong> Three proportional valve failures in twelve months (~$4,000 per failure in parts and downtime). Colleague suggested the return-line filter may be inadequate.</p>
+        <p><strong>Recommendation:</strong> Upgrade from spin-on 10-micron nominal element to a high-efficiency return-line filter assembly with a 3-micron absolute element (β₃(c) ≥ 1000). Target cleanliness: ISO 16/14/11 for proportional valve reliability. Reasoning: the 10-micron nominal element was likely passing particles in the 5–15 micron range — the range most damaging to proportional valve spools, which have critical clearances of 1–4 microns.</p>
+      </div>
+    </div>
+
+    <h3>Stage 1 — Installation check-in (24 hours after installation)</h3>
+
+    <div class="scenario">
+      <div class="scenario-header"><span>Conversation excerpt — Stage 1</span></div>
+      <div class="scenario-body">
+        <div class="scenario-exchange">
+          <div class="speaker ai">FluidOracle</div>
+          <p>Welcome back. You explored return-line filtration for your stamping press HPU and we discussed upgrading to a 3-micron absolute element. Did you end up going with that element, or something different?</p>
+        </div>
+        <div class="scenario-exchange">
+          <div class="speaker eng">Engineer</div>
+          <p>Went with it. Installed it yesterday during our Saturday shutdown.</p>
+        </div>
+        <div class="scenario-exchange">
+          <div class="speaker ai">FluidOracle</div>
+          <p>Good. A few things worth capturing while they're fresh — these become your baseline for tracking how the filter performs over the coming months. What's your initial differential pressure reading across the filter at operating temperature?</p>
+        </div>
+        <div class="scenario-exchange">
+          <div class="speaker eng">Engineer</div>
+          <p>About 12 psi at normal running temp.</p>
+        </div>
+        <div class="scenario-exchange">
+          <div class="speaker ai">FluidOracle</div>
+          <p>That's a reasonable starting point for that element at your flow rate with AW 46. When you opened the old housing, what did the old element look like? Any metal particles, sludge, or water?</p>
+        </div>
+        <div class="scenario-exchange">
+          <div class="speaker eng">Engineer</div>
+          <p>Lots of fine dark sludge. No obvious metal. Element was pretty much solid black.</p>
+        </div>
+        <div class="scenario-exchange">
+          <div class="speaker ai">FluidOracle</div>
+          <p>That's consistent with what you'd expect — the 10-micron nominal element was accumulating the particles it could capture while passing the fines straight through. Dark sludge suggests oxidized oil and fine wear debris built up over time. Did you pull a fluid sample before or after the swap?</p>
+        </div>
+        <div class="scenario-exchange">
+          <div class="speaker eng">Engineer</div>
+          <p>No, we don't really do fluid sampling. Should we?</p>
+        </div>
+        <div class="scenario-exchange">
+          <div class="speaker ai">FluidOracle</div>
+          <p>For a system with proportional valves, periodic sampling is one of the most cost-effective things you can do. A baseline sample in the next day or two and another at four to six weeks will show you exactly how much cleaner the system is getting. Most labs charge $25–40 per sample. Against $4,000 valve failures, it's cheap insurance.</p>
+        </div>
+      </div>
+    </div>
+
+    <p>
+      Stage 1 produces the first section of the commissioning report: component confirmed,
+      initial DP baseline of 12 psi recorded, old element condition documented, fluid sampling
+      recommended. The PDF is generated at the close of the conversation and attached to the
+      Stage 2 email.
+    </p>
+
+    <h3>Stage 2 — Performance verification (5 weeks later)</h3>
+
+    <div class="scenario">
+      <div class="scenario-header"><span>Conversation excerpt — Stage 2</span></div>
+      <div class="scenario-body">
+        <div class="scenario-exchange">
+          <div class="speaker ai">FluidOracle</div>
+          <p>It's been about five weeks since you installed the new element on your stamping press HPU. How's it running?</p>
+        </div>
+        <div class="scenario-exchange">
+          <div class="speaker eng">Engineer</div>
+          <p>Pretty good. No valve issues since the swap.</p>
+        </div>
+        <div class="scenario-exchange">
+          <div class="speaker ai">FluidOracle</div>
+          <p>That's an encouraging early sign. What's your current differential pressure reading?</p>
+        </div>
+        <div class="scenario-exchange">
+          <div class="speaker eng">Engineer</div>
+          <p>Showing about 18 psi.</p>
+        </div>
+        <div class="scenario-exchange">
+          <div class="speaker ai">FluidOracle</div>
+          <p>You've gone from 12 to 18 psi in five weeks — a moderate loading rate. The element is doing its job. Bypass on that housing typically opens around 30–35 psi, so at your current rate you're looking at an element change around weeks 12–15. Loading rate usually slows as the system gets cleaner, so that projection may be conservative. Did you end up pulling a fluid sample?</p>
+        </div>
+        <div class="scenario-exchange">
+          <div class="speaker eng">Engineer</div>
+          <p>Yeah, we pulled one last week. Lab said ISO 17/15/12.</p>
+        </div>
+        <div class="scenario-exchange">
+          <div class="speaker ai">FluidOracle</div>
+          <p>That's a significant improvement for a system that was failing proportional valves. You were likely running ISO 20/18/15 or worse before the change — each ISO code step is a doubling of particle count. 17/15/12 is at the threshold for proportional valve reliability. As the system continues to clean up, 16/14/11 is achievable and would give you real margin. No unusual noise, temperature changes, or anomalies?</p>
+        </div>
+        <div class="scenario-exchange">
+          <div class="speaker eng">Engineer</div>
+          <p>Nope, running normal.</p>
+        </div>
+      </div>
+    </div>
+
+    <h3>Stage 3 — Service life record (11 months later)</h3>
+
+    <div class="scenario">
+      <div class="scenario-header"><span>Conversation excerpt — Stage 3</span></div>
+      <div class="scenario-body">
+        <div class="scenario-exchange">
+          <div class="speaker ai">FluidOracle</div>
+          <p>It's been about eleven months since you installed the new element on your stamping press HPU. Is it still in service?</p>
+        </div>
+        <div class="scenario-exchange">
+          <div class="speaker eng">Engineer</div>
+          <p>Replaced it about two months ago. Got to about 28 psi and decided to swap it on a scheduled shutdown.</p>
+        </div>
+        <div class="scenario-exchange">
+          <div class="speaker ai">FluidOracle</div>
+          <p>So roughly nine months of service life, changed proactively before bypass — good practice. What did the element look like when you pulled it?</p>
+        </div>
+        <div class="scenario-exchange">
+          <div class="speaker eng">Engineer</div>
+          <p>Dark but even loading, no collapse, no bypass marks.</p>
+        </div>
+        <div class="scenario-exchange">
+          <div class="speaker ai">FluidOracle</div>
+          <p>Even loading with no structural damage means the element was correctly sized for your flow and contamination level. How have the proportional valves been over the full period?</p>
+        </div>
+        <div class="scenario-exchange">
+          <div class="speaker eng">Engineer</div>
+          <p>Zero failures since the filter swap. That's the longest we've gone in three years.</p>
+        </div>
+        <div class="scenario-exchange">
+          <div class="speaker ai">FluidOracle</div>
+          <p>Eleven months, zero valve failures, versus three in the previous twelve months. That's approximately $12,000 in avoided failures. Knowing what you know now, would you select the same filter for this application?</p>
+        </div>
+        <div class="scenario-exchange">
+          <div class="speaker eng">Engineer</div>
+          <p>Absolutely. Already ordered replacement elements.</p>
+        </div>
+      </div>
+    </div>
+
+    <p>
+      The final commissioning report — four sections, covering fourteen months from initial
+      consultation to service life record — is generated and delivered to the engineer.
+      It documents baseline DP, loading trajectory, fluid cleanliness improvement, nine months
+      of service life, zero valve failures, and an explicit confirmation that the engineer
+      would select the same component again. It is a document the engineer can file in their
+      maintenance system, show to plant management, or reference the next time the same
+      question arises.
+    </p>
+    <p>
+      It also answers, definitively, whether the recommendation was correct.
+    </p>
+
+    <!-- 7. Email and Trust -->
+    <h2 id="email">7. Email and trust</h2>
+
+    <p>
+      Engineers at industrial facilities often have aggressive email filtering and a
+      well-calibrated skepticism toward unsolicited messages. CPVP makes specific
+      requirements for follow-up email design, because a technically sound protocol
+      that engineers don't trust or don't open is not a protocol at all.
+    </p>
+
+    <p>
+      <strong>Subject lines must be specific.</strong> Not "How's your filter working?" but
+      "Your 3-micron return-line element in stamping press HPU — installation check-in."
+      The engineer should recognize the follow-up before opening it — ideally before
+      deciding whether to open it.
+    </p>
+    <p>
+      <strong>The email body summarizes the original consultation.</strong> Application context,
+      component recommended or installed, date of consultation, key operating parameters.
+      Sufficient information to confirm legitimacy without requiring a click. The engineer who
+      has no time to click through today should still receive value from the email itself.
+    </p>
+    <p>
+      <strong>The PDF commissioning report is attached to every Stage 1, 2, and 3 email</strong>
+      alongside the check-in link. Engineers can file the PDF, forward it to a colleague,
+      or attach it to a work order regardless of whether they engage with the conversation.
+      Maximum value delivery with minimum friction.
+    </p>
+    <p>
+      <strong>Tokenized links are time-limited, not single-use.</strong> A seven-day expiry
+      with a re-authentication fallback accommodates the reality that engineers get interrupted.
+      Single-use tokens that expire on first click are a form design optimized for the platform,
+      not the engineer.
+    </p>
+    <p>
+      <strong>DKIM, SPF, and DMARC authentication are required.</strong> Non-negotiable for
+      deliverability into industrial facility mail environments. The sending domain, link domain,
+      and platform brand must be consistent. Domain changes reset trust with both mail providers
+      and individual engineers.
+    </p>
+
+    <!-- 8. Data Model -->
+    <h2 id="data">8. The data model</h2>
+
+    <p>
+      CPVP defines a minimum data model that implementing platforms must capture.
+      Vertical-specific extensions are expected and encouraged — the base model
+      provides the shared structure that makes cross-vertical and cross-platform
+      aggregation possible.
+    </p>
+    <p>
+      Two architectural principles govern the data model:
+    </p>
+    <p>
+      <strong>Operating context is system-level, not vertical-level.</strong>
+      The hydraulic fluid, system pressure, flow rate, temperature range, and application
+      description captured during a filtration consultation describe the hydraulic system —
+      not just the filter. When the same engineer later asks about a pump on the same power unit,
+      that context already exists. The platform is not starting from scratch. This is the
+      architectural foundation that makes CPVP useful across verticals.
+    </p>
+    <p>
+      <strong>Records are append-only.</strong> When an engineer reports at Stage 2 that
+      what was actually installed differed from Stage 1, the record does not update — it
+      appends a dated correction. The historical record is preserved. This is not a limitation;
+      it is an intentional design decision that makes the data trustworthy over time.
+    </p>
+
+    <!-- 9. Compounding Value -->
+    <h2 id="compounding">9. The compounding value of outcome data</h2>
+
+    <p>
+      A single CPVP record — one engineer, one component, one installation — is moderately
+      useful. It validates or refutes one recommendation. It documents one failure mode or
+      one success.
+    </p>
+    <p>
+      The value of CPVP is not in individual records. It is in what the records reveal
+      in aggregate, over time.
+    </p>
+
+    <div class="data-points-grid">
+      <div class="data-point">
+        <div class="dp-num">100</div>
+        <div class="dp-label">outcomes → identify which components perform in high-temperature applications versus what their spec sheets predict</div>
+      </div>
+      <div class="data-point">
+        <div class="dp-num">1K</div>
+        <div class="dp-label">outcomes → identify which manufacturers' performance claims consistently match real-world results across applications</div>
+      </div>
+      <div class="data-point">
+        <div class="dp-num">10K</div>
+        <div class="dp-label">outcomes → a performance database that no manufacturer, distributor, or standards body possesses</div>
+      </div>
+    </div>
+
+    <p>
+      Each outcome data point makes future recommendations better. This compounds:
+      recommendations improve, which increases engineer trust, which increases engagement
+      and outcome reporting, which further improves recommendations. The asset grows with
+      use. This dynamic is not achievable with manufacturer specifications alone, because
+      specifications describe controlled conditions. It is only achievable with real-world
+      outcome data collected systematically from real installations.
+    </p>
+
+    <blockquote>
+      The component selection platform that accumulates outcome data will, over time,
+      know things about real-world component performance that no manufacturer, distributor,
+      or standards body knows. That knowledge is not a feature. It is a competitive position
+      that compounds and cannot be replicated by starting later.
+    </blockquote>
+
+    <p>
+      This is why CPVP is built into the platform from day one, not added as a later feature.
+      The value of outcome data is proportional to its age and volume. There is no shortcut
+      to having collected data for three years. The accumulation begins only when the infrastructure
+      begins.
+    </p>
+
+    <!-- 10. Implementing CPVP -->
+    <h2 id="implementing">10. Implementing CPVP</h2>
+
+    <p>
+      CPVP is designed to work across any component category. Implementing platforms register
+      vertical-specific configuration — check-in parameters, performance metrics, failure mode
+      taxonomies — and the shared infrastructure handles scheduling, email delivery,
+      conversation flow, and PDF generation.
+    </p>
+    <p>
+      For the hydraulic filtration vertical, the key performance metrics registered are:
+      differential pressure (baseline, current, loading rate, projected life); fluid cleanliness
+      code (ISO 4406); problem resolution status (valve failures, contamination events, or
+      whatever the engineer reported as their original problem); and component condition at
+      replacement. The failure mode taxonomy includes: media fouling, housing corrosion,
+      differential pressure exceedance, bypass, media migration, mechanical damage, and
+      changed system requirements.
+    </p>
+    <p>
+      The minimum requirements for a compliant CPVP implementation:
+    </p>
+    <ul>
+      <li>Three check-in stages at the specified intervals, triggered by installation confirmation</li>
+      <li>Append-only records with dated corrections</li>
+      <li>Email trust requirements met: subject line specificity, consultation summary in body, DKIM/SPF/DMARC authentication, unsubscribe in every message</li>
+      <li>The Stage 3 key question asked and recorded</li>
+      <li>A PDF commissioning report generated and delivered to the engineer at each stage</li>
+    </ul>
+    <p>
+      The full specification, including data model definitions and vertical configuration
+      guidance, is available at <strong>fluidoracle.com/cpvp/v1/</strong> under CC BY 4.0.
+      Organizations implementing CPVP are encouraged to contact
+      <a href="mailto:checkins@fluidoracle.com">checkins@fluidoracle.com</a> to be listed
+      as implementing platforms and to contribute to future versions of the standard.
+    </p>
+
+    <!-- Conclusion -->
+    <h2 id="conclusion">11. Conclusion</h2>
+
+    <p>
+      The industrial component selection process has a structural gap that has persisted because
+      it is difficult to close without purpose-built infrastructure. Engineers make decisions,
+      components are installed, systems run — and the outcomes flow nowhere. The knowledge
+      accumulates in people and dissipates when those people leave.
+    </p>
+    <p>
+      CPVP does not solve this with a survey or a feedback form. It closes the loop through
+      structured follow-up conversations grounded in the specific context of each installation,
+      at intervals calibrated to the component lifecycle, delivering value to the engineer at
+      every interaction. The outcome data is a byproduct of a useful service, not an extraction
+      in exchange for nothing.
+    </p>
+    <p>
+      The protocol is simple. The infrastructure to run it is not trivial. But the compounding
+      value of the data it produces — validated over time, across applications, across component
+      categories — represents something the industrial engineering community does not currently
+      have: a systematic, structured record of how components actually perform in the field.
+    </p>
+    <p>
+      We are publishing CPVP as an open standard because the problem it addresses is an
+      industry problem, not a platform problem. The more organizations that implement it,
+      the more valuable the aggregate dataset becomes. We invite engineers, manufacturers,
+      distributors, and platform builders to implement CPVP, to use it, and to contribute
+      to its evolution.
+    </p>
+
+    <!-- About -->
+    <h2 id="about">About FluidOracle</h2>
+
+    <p>
+      FluidOracle is an AI-powered, vendor-neutral consulting platform for industrial
+      fluid-path component selection. The platform helps engineers select filters, pumps,
+      valves, seals, and nozzles through conversational AI grounded in curated manufacturer
+      catalogs, engineering standards, and real-world outcome data.
+    </p>
+    <p>
+      The first vertical — hydraulic filtration — is available at
+      <a href="https://filteroracle.com">filteroracle.com</a>.
+      The spray nozzle vertical is available at
+      <a href="https://sprayoracle.com">sprayoracle.com</a>.
+    </p>
+    <p>
+      FluidOracle is independent and has no manufacturer relationships that influence
+      recommendations. The knowledge base covers the full market.
+    </p>
+    <p>
+      Contact: <a href="mailto:checkins@fluidoracle.com">checkins@fluidoracle.com</a>
+      &nbsp;·&nbsp;
+      <a href="https://fluidoracle.com">fluidoracle.com</a>
+    </p>
+
+    <div class="doc-footer">
+      <p><strong>Citation:</strong> FluidOracle. (2026). <em>Closing the Loop: A Framework for Post-Installation Outcome Tracking in Industrial Fluid Systems.</em> fluidoracle.com/white-paper/</p>
+      <p><strong>CPVP specification:</strong> <a href="https://fluidoracle.com/cpvp/v1/">fluidoracle.com/cpvp/v1/</a></p>
+      <p><strong>License:</strong> This work is published under <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>. You are free to share and adapt with attribution.</p>
+    </div>
+
+  </article>
+</div>
+
+<footer>
+  <p>
+    FluidOracle &mdash; Independent AI Consulting for Industrial Fluid Systems
+    &nbsp;&middot;&nbsp;
+    <a href="/">fluidoracle.com</a>
+    &nbsp;&middot;&nbsp;
+    <a href="/cpvp/v1/">CPVP v1</a>
+    &nbsp;&middot;&nbsp;
+    CC BY 4.0
+  </p>
+</footer>
+
+</body>
+</html>
