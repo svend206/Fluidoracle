@@ -18,3 +18,4 @@ Canonical URL: https://fluidoracle.com/cpvp/v1/
 ## License
 
 Website content © FluidOracle. The CPVP specification is published under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
+
