@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>For Manufacturers — FluidOracle</title>
+  <meta name="description" content="FluidOracle outcome data — what it is, why it matters, and how manufacturers can access it." />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --blue-dark:  #1e3a5f;
+      --blue-mid:   #2563eb;
+      --blue-light: #3b82f6;
+      --blue-pale:  #eff6ff;
+      --gray-900:   #111827;
+      --gray-700:   #374151;
+      --gray-500:   #6b7280;
+      --gray-300:   #d1d5db;
+      --gray-100:   #f3f4f6;
+      --white:      #ffffff;
+      --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --serif: Georgia, 'Times New Roman', serif;
+    }
+    html { scroll-behavior: smooth; }
+    body { font-family: var(--sans); color: var(--gray-900); background: var(--white); line-height: 1.7; }
+
+    nav {
+      position: sticky; top: 0; z-index: 10;
+      background: var(--white); border-bottom: 1px solid var(--gray-300);
+      padding: 0 2rem;
+    }
+    .nav-inner {
+      max-width: 860px; margin: 0 auto;
+      display: flex; align-items: center; justify-content: space-between;
+      height: 52px;
+    }
+    .nav-logo {
+      display: flex; align-items: center; gap: 8px;
+      text-decoration: none; color: var(--gray-900); font-size: 0.9rem; font-weight: 500;
+    }
+    .nav-logo svg { width: 22px; height: 22px; }
+    .nav-link {
+      font-size: 0.82rem; color: var(--gray-500); text-decoration: none;
+      padding: 0.35rem 0.75rem; border: 1px solid var(--gray-300); border-radius: 5px;
+    }
+
+    .hero {
+      background: var(--blue-dark); color: var(--white);
+      padding: 4.5rem 2rem 3.5rem;
+    }
+    .hero-inner { max-width: 740px; margin: 0 auto; }
+    .hero-label {
+      font-size: 0.68rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.12em;
+      color: #60a5fa; margin-bottom: 1rem;
+    }
+    .hero h1 {
+      font-size: clamp(1.6rem, 3vw, 2.25rem);
+      font-weight: 700; line-height: 1.2;
+      letter-spacing: -0.02em; margin-bottom: 1rem;
+    }
+    .hero p { color: #93c5fd; font-size: 1.05rem; max-width: 580px; }
+
+    .body { max-width: 740px; margin: 0 auto; padding: 4rem 2rem; }
+
+    h2 {
+      font-size: 1.2rem; font-weight: 700;
+      color: var(--blue-dark); margin: 3rem 0 0.875rem;
+      padding-top: 1rem; border-top: 1px solid var(--gray-300);
+      letter-spacing: -0.01em;
+    }
+    h2:first-of-type { margin-top: 0; border-top: none; padding-top: 0; }
+    h3 { font-size: 0.95rem; font-weight: 600; color: var(--gray-900); margin: 1.5rem 0 0.4rem; }
+
+    p { color: var(--gray-700); font-size: 0.95rem; margin-bottom: 1rem; }
+    p:last-child { margin-bottom: 0; }
+    ul { margin: 0.5rem 0 1rem 1.25rem; color: var(--gray-700); }
+    li { margin-bottom: 0.4rem; font-size: 0.95rem; }
+    strong { color: var(--gray-900); }
+
+    .callout {
+      background: var(--blue-pale);
+      border-left: 3px solid var(--blue-light);
+      border-radius: 0 8px 8px 0;
+      padding: 1.25rem 1.5rem;
+      margin: 1.25rem 0;
+    }
+    .callout p { font-size: 0.9rem; color: var(--blue-dark); margin: 0; }
+
+    .data-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 1rem; margin: 1.25rem 0;
+    }
+    .data-card {
+      background: var(--blue-dark); color: var(--white);
+      border-radius: 8px; padding: 1.25rem;
+      text-align: center;
+    }
+    .data-card .num {
+      font-size: 2rem; font-weight: 800;
+      color: #60a5fa; line-height: 1; margin-bottom: 0.35rem;
+    }
+    .data-card .label { font-size: 0.78rem; color: #bfdbfe; line-height: 1.4; }
+
+    .exhaust-sections {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 1rem; margin: 1.25rem 0;
+    }
+    .exhaust-card {
+      border: 1px solid var(--gray-300); border-radius: 8px;
+      padding: 1.25rem;
+    }
+    .exhaust-card h3 { margin-top: 0; font-size: 0.875rem; }
+    .exhaust-card ul { font-size: 0.85rem; margin-left: 1rem; }
+
+    .contrast {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 0; margin: 1.25rem 0;
+      border: 1px solid var(--gray-300); border-radius: 8px; overflow: hidden;
+    }
+    .contrast-col { padding: 1.25rem; }
+    .contrast-col:first-child {
+      background: var(--gray-100);
+      border-right: 1px solid var(--gray-300);
+    }
+    .contrast-col h4 {
+      font-size: 0.75rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.08em;
+      color: var(--gray-500); margin-bottom: 0.75rem;
+    }
+    .contrast-col:last-child h4 { color: var(--blue-mid); }
+    .contrast-col ul { font-size: 0.85rem; margin-left: 1rem; }
+
+    .cta-box {
+      background: var(--blue-dark); color: var(--white);
+      border-radius: 10px; padding: 2.5rem;
+      margin-top: 3rem; text-align: center;
+    }
+    .cta-box h2 {
+      color: var(--white); border: none; padding: 0; margin: 0 0 0.75rem;
+      font-size: 1.3rem;
+    }
+    .cta-box p { color: #93c5fd; margin-bottom: 1.5rem; }
+    .cta-box a {
+      display: inline-block;
+      background: var(--white); color: var(--blue-dark);
+      font-weight: 700; font-size: 0.875rem;
+      padding: 0.75rem 1.5rem; border-radius: 6px;
+      text-decoration: none;
+    }
+    .cta-box .cta-note {
+      margin-top: 1rem; font-size: 0.78rem; color: #60a5fa;
+    }
+    .cta-box .cta-note p { color: #60a5fa; font-size: 0.78rem; margin: 0; }
+
+    footer {
+      border-top: 1px solid var(--gray-300);
+      padding: 2rem; text-align: center;
+      color: var(--gray-500); font-size: 0.8rem;
+    }
+    footer a { color: var(--gray-500); }
+
+    @media (max-width: 600px) {
+      .data-grid { grid-template-columns: 1fr; }
+      .exhaust-sections { grid-template-columns: 1fr; }
+      .contrast { grid-template-columns: 1fr; }
+      .contrast-col:first-child { border-right: none; border-bottom: 1px solid var(--gray-300); }
+      .cta-box { padding: 1.75rem; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a href="/" class="nav-logo">
+      <svg viewBox="0 0 32 32" fill="none">
+        <circle cx="16" cy="16" r="14" fill="#1e3a5f" stroke="#3b82f6" stroke-width="2"/>
+        <path d="M16 6 L14 16 L12 26 M16 6 L18 16 L20 26 M16 6 L16 26 M16 6 L10 22 M16 6 L22 22"
+              stroke="#60a5fa" stroke-width="1.5" fill="none" stroke-linecap="round" opacity="0.8"/>
+        <circle cx="16" cy="6" r="2" fill="#93c5fd"/>
+      </svg>
+      FluidOracle
+    </a>
+    <a href="mailto:checkins@fluidoracle.com" class="nav-link">Get in touch</a>
+  </div>
+</nav>
+
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-label">For Manufacturers</div>
+    <h1>Your products are being selected and installed. We track what happens next.</h1>
+    <p>FluidOracle generates real-world component performance data as a byproduct of helping engineers make better selections. Here's what that data is, why it matters, and how you can access it.</p>
+  </div>
+</div>
+
+<div class="body">
+
+  <h2>What FluidOracle does</h2>
+  <p>
+    FluidOracle is an AI-powered, vendor-neutral consulting platform for industrial fluid-path
+    component selection. Engineers describe their operating conditions and problems. The platform
+    asks diagnostic questions, searches curated manufacturer literature and engineering standards,
+    and returns grounded recommendations with cited sources.
+  </p>
+  <p>
+    The first vertical — hydraulic filtration — is live at
+    <a href="https://filteroracle.com" style="color:var(--blue-mid)">filteroracle.com</a>.
+    The platform is free for engineers. No account required to get a recommendation.
+  </p>
+  <div class="callout">
+    <p>
+      <strong>Vendor-neutral means vendor-neutral.</strong> Recommendations are based on
+      operating conditions, engineering standards, and real-world performance data —
+      not commercial relationships. This is what makes engineers trust it.
+      It is also what makes the outcome data meaningful.
+    </p>
+  </div>
+
+  <h2>The exhaust</h2>
+  <p>
+    Every consultation generates data. Most of it flows back to the engineer — a recommendation,
+    cited sources, a commissioning report. Some of it accumulates in the platform. We call this
+    the <strong>exhaust</strong>: the structured byproduct of a useful service.
+  </p>
+  <p>
+    The exhaust has two layers.
+  </p>
+
+  <div class="exhaust-sections">
+    <div class="exhaust-card">
+      <h3>Selection data</h3>
+      <ul>
+        <li>What engineers are selecting and why</li>
+        <li>Which operating conditions drive which product categories</li>
+        <li>Where engineers struggle — questions with no confident answer</li>
+        <li>Which specifications engineers cite most often</li>
+        <li>Which alternatives engineers consider and reject</li>
+      </ul>
+    </div>
+    <div class="exhaust-card">
+      <h3>Outcome data</h3>
+      <ul>
+        <li>Whether the recommended component was actually installed</li>
+        <li>Initial and ongoing performance readings (ΔP, cleanliness codes, etc.)</li>
+        <li>Whether the original problem was resolved</li>
+        <li>Total service life and failure mode, if applicable</li>
+        <li>"Would you select the same component again?" — answered by the engineer who lived with it</li>
+      </ul>
+    </div>
+  </div>
+
+  <p>
+    Outcome data is collected through the
+    <a href="/cpvp/v1/" style="color:var(--blue-mid)">Component Performance Verification Protocol (CPVP)</a>
+    — a structured three-stage follow-up system that runs 24 hours, 4–6 weeks, and
+    6–12 months after installation. Each interaction delivers a professional commissioning
+    report to the engineer. The outcome data is a byproduct of that service.
+  </p>
+
+  <h2>Why this data is different</h2>
+  <p>
+    Manufacturers have access to specification data — what their products are rated to do
+    under controlled conditions. Distributors have access to sales data — what was ordered,
+    when, and where. Neither has systematic access to what actually happened after installation.
+  </p>
+
+  <div class="contrast">
+    <div class="contrast-col">
+      <h4>What you have now</h4>
+      <ul>
+        <li>Performance in controlled test conditions</li>
+        <li>Sales volumes and distributor orders</li>
+        <li>Warranty claims (failures that were reported)</li>
+        <li>Customer satisfaction surveys (self-selected, infrequent)</li>
+        <li>Anecdotal field feedback through sales reps</li>
+      </ul>
+    </div>
+    <div class="contrast-col">
+      <h4>What FluidOracle captures</h4>
+      <ul>
+        <li>Performance in real operating conditions, across real applications</li>
+        <li>Baseline and progressive performance readings over time</li>
+        <li>Failure modes in actual field conditions with operating context</li>
+        <li>Direct engineer judgment: would they specify it again?</li>
+        <li>Applications where your products are being selected and why</li>
+        <li>Applications where your products are being passed over and why</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="callout">
+    <p>
+      <strong>The most valuable data point in the system</strong> is an engineer who has run your
+      product for nine months in a specific application answering a single question:
+      "Knowing what you know now, would you select the same component for this application?"
+      No specification, no test report, and no sales figure tells you what that answer tells you.
+    </p>
+  </div>
+
+  <h2>The compounding problem you should know about</h2>
+  <p>
+    Outcome data compounds. The platform that has been collecting structured field performance
+    data for three years knows things that a platform that started collecting last month
+    cannot know — regardless of how good the newer platform's AI is. There is no shortcut
+    to having accumulated data for three years.
+  </p>
+  <p>
+    This matters for manufacturers because it determines which platform's recommendations
+    engineers will trust over time. Recommendations grounded in real-world outcome data
+    will eventually outperform recommendations grounded only in specifications — not because
+    the AI is smarter, but because the data is better.
+  </p>
+  <p>
+    The manufacturers whose products are in FluidOracle's knowledge base, whose performance
+    data is being captured, and who have a relationship with the platform will be positioned
+    differently from those who don't — as that data accumulates.
+  </p>
+
+  <h2>What a manufacturer relationship looks like</h2>
+  <p>
+    FluidOracle does not sell featured placement in recommendations. Recommendations are
+    determined by operating conditions and performance data, not commercial relationships.
+    This is non-negotiable — it is the foundation of engineer trust, and engineer trust
+    is what makes the outcome data meaningful.
+  </p>
+  <p>
+    What manufacturer relationships do provide:
+  </p>
+  <ul>
+    <li><strong>Access to outcome data</strong> for your products — aggregated and anonymized, covering real-world field performance across applications</li>
+    <li><strong>Knowledge base priority</strong> — your current catalog, application notes, and technical literature are kept current in the platform's retrieval system</li>
+    <li><strong>Selection signal data</strong> — aggregated insight into when and why engineers are specifying your products, and when they're choosing alternatives</li>
+    <li><strong>Early access to emerging verticals</strong> — as the platform expands to pumps, valves, seals, and other component categories</li>
+    <li><strong>Performance gap identification</strong> — when real-world data diverges from specification data, you find out — before it becomes a warranty pattern</li>
+  </ul>
+
+  <h2>What we're looking for in manufacturer partners</h2>
+  <p>
+    We're building relationships with manufacturers who want to understand real-world
+    field performance — not just sell. The right conversation starts with:
+  </p>
+  <ul>
+    <li>Current product catalog and application documentation</li>
+    <li>Willingness to receive outcome data, including unflattering results</li>
+    <li>Interest in understanding where real-world performance diverges from specification</li>
+  </ul>
+  <p>
+    We're not looking for endorsements, exclusivity, or co-marketing arrangements.
+    We're looking for manufacturers who believe that better field data is good for
+    the industry and good for their engineering credibility.
+  </p>
+
+  <div class="cta-box">
+    <h2>Start the conversation</h2>
+    <p>
+      If you're a manufacturer of hydraulic filtration products and want to understand
+      what FluidOracle is seeing in the field, reach out.
+    </p>
+    <a href="mailto:checkins@fluidoracle.com">checkins@fluidoracle.com</a>
+    <div class="cta-note">
+      <p>No pitch deck. No commitment required. Just a conversation about what the data shows.</p>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  <p>
+    FluidOracle &mdash; Independent AI Consulting for Industrial Fluid Systems
+    &nbsp;&middot;&nbsp;
+    <a href="/">fluidoracle.com</a>
+    &nbsp;&middot;&nbsp;
+    <a href="/cpvp/v1/">CPVP v1</a>
+    &nbsp;&middot;&nbsp;
+    <a href="/white-paper/">White paper</a>
+  </p>
+</footer>
+
+</body>
+</html>
