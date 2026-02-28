@@ -5,6 +5,7 @@ Fluidoracle — Consultation Routes
 import json
 import logging
 import os
+import re
 import traceback
 from pathlib import Path
 
@@ -12,6 +13,10 @@ from fastapi import APIRouter, HTTPException, Request, Header
 from fastapi.responses import HTMLResponse, StreamingResponse
 
 import core.database as database
+
+
+def strip_html(text: str) -> str:
+    return re.sub(r'<[^>]+>', '', text)
 from core.models import (
     ConsultSessionRequest, ConsultMessageRequest,
     ConsultFeedbackRequest, ConsultOutcomeRequest, ConsultOutcomeUpdateRequest,
