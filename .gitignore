@@ -45,3 +45,4 @@ Thumbs.db
 # Training data (large JSONL)
 ai/08-training-data/*.jsonl
 !ai/08-training-data/.gitkeep
+fluidoracle.db
