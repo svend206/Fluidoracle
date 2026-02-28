@@ -1,0 +1,47 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+*.egg
+.venv/
+venv/
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Data (production)
+data/*.db
+data/*.db-shm
+data/*.db-wal
+
+# Vector store (large binary artifacts)
+vector-store/*/children/
+vector-store/*/parents/
+vector-store/bm25/*.pkl
+!vector-store/**/.gitkeep
+
+# Knowledge base source documents (PDFs, proprietary)
+platforms/*/verticals/*/sources/*
+!platforms/*/verticals/*/sources/.gitkeep
+
+# Frontend build
+frontend/node_modules/
+frontend/dist/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Training data (large JSONL)
+ai/08-training-data/*.jsonl
+!ai/08-training-data/.gitkeep

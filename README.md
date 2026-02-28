@@ -1,21 +1,47 @@
-# FluidOracle
+# Fluidoracle
 
-AI-powered, vendor-neutral consulting for industrial fluid-path component selection.
+Vendor-neutral AI consulting platform for industrial fluid system components.
 
-**fluidoracle.com** — This repository powers the FluidOracle platform website and hosts the Component Performance Verification Protocol (CPVP) as an open standard.
+## Architecture
 
-## Contents
+One codebase, two deployment platforms:
 
-- `/` — Platform landing page
-- `/cpvp/v1/` — Component Performance Verification Protocol v1 specification
+- **FPS (Fluid Power Systems)** — Closed-loop hydraulic/pneumatic circuits. Verticals: hydraulic filtration, pumps, valves, seals.
+- **FDS (Fluid Delivery Systems)** — Open-loop fluid delivery processes. Verticals: spray nozzles, atomizers, precision applicators.
 
-## CPVP
+## Structure
 
-The Component Performance Verification Protocol is an open standard for tracking real-world industrial component performance after installation. Published under CC BY 4.0.
+```
+core/               Shared methodology — consultation engine, retrieval, auth, database
+platforms/fps/      Fluid Power Systems platform config and verticals
+platforms/fds/      Fluid Delivery Systems platform config and verticals
+frontend/           React + Vite + Tailwind SPA
+vector-store/       Per-vertical ChromaDB + BM25 indexes
+tests/              Test fixtures and integration tests
+deploy/             Per-platform Docker/Caddy deployment configs
+docs/               Platform documentation (CPVP, business model, architecture)
+```
 
-Canonical URL: https://fluidoracle.com/cpvp/v1/
+## Development
 
-## License
+```bash
+# Install dependencies
+pip install -r requirements.txt
+cd frontend && npm install
 
-Website content © FluidOracle. The CPVP specification is published under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
+# Run backend
+uvicorn main:app --reload
 
+# Run frontend dev server
+cd frontend && npm run dev
+
+# Ingest a knowledge base
+python -m core.retrieval.ingest --platform fps --vertical hydraulic_filtration
+
+# Run tests
+python -m tests.run_tests --vertical hydraulic_filtration
+```
+
+## Static Site
+
+The marketing site (fluidoracle.com) is served from the `gh-pages` branch. Do not modify gh-pages content from this branch.

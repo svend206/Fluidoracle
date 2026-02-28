@@ -1,0 +1,6 @@
+# Raw fetched content — not for version control
+# Purchased standards (watermarked) and downloaded PDFs live here
+raw-fetch/
+
+# Synthesized research artifacts — runtime output, not source code
+raw-research/

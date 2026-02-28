@@ -1,0 +1,88 @@
+# Vertical configuration: hydraulic-filters
+# This file defines sources, search terms, and parameters for each phase.
+
+vertical: hydraulic-filters
+display_name: Hydraulic & Lube Oil Filtration
+
+# Phase 1 — Standards
+phase1:
+  iso_tc_sc:
+    - tc: 131
+      sc: 6
+      url: https://www.iso.org/committee/5069/x/catalogue/
+  secondary_bodies:
+    - name: SAE
+      search_query: "hydraulic fluid cleanliness filter testing SAE standard"
+    - name: NFPA
+      search_query: "NFPA hydraulic filtration contamination control standard"
+  forum_search_queries:
+    eng_tips:
+      - 'site:eng-tips.com "ISO 16889"'
+      - 'site:eng-tips.com "ISO 4406"'
+      - 'site:eng-tips.com "beta ratio" hydraulic filter'
+      - 'site:eng-tips.com "multi-pass test" filter'
+      - 'site:eng-tips.com "NAS 1638" hydraulic'
+    reddit:
+      - 'site:reddit.com/r/hydraulics "ISO 4406"'
+      - 'site:reddit.com/r/hydraulics "hydraulic filter standard"'
+      - 'site:reddit.com/r/fluidpower filter cleanliness'
+  vendor_standard_queries:
+    - '"ISO 4406" site:parker.com'
+    - '"ISO 16889" site:hydac.com'
+    - '"beta ratio" "filter" site:pall.com'
+    - '"ISO 4406" hydraulic filter filetype:pdf'
+  results_per_query: 10
+
+# Phase 2 — Academic
+phase2:
+  search_queries:
+    scholar:
+      - "hydraulic filter beta ratio particle counting"
+      - "ISO 16889 multi-pass filter test"
+      - "hydraulic fluid contamination control"
+      - "tribology hydraulic system contamination"
+    syllabus:
+      - '"hydraulic systems" syllabus textbook site:edu'
+      - '"fluid power" course textbook site:edu'
+    book_recommendations:
+      - 'site:eng-tips.com "best book" hydraulic filtration'
+      - 'site:reddit.com "recommend" "book" hydraulic systems'
+
+# Phase 3 — Vendors
+phase3:
+  known_vendors:
+    - name: Parker Hannifin
+      catalog_url: https://www.parker.com/us/en/products/hydraulic-filters.html
+    - name: HYDAC
+      catalog_url: https://www.hydac.com/en/products/filter-systems.html
+    - name: Pall Corporation
+      catalog_url: https://www.pall.com/en/filtration/hydraulic.html
+    - name: Donaldson
+      catalog_url: https://www.donaldson.com/en-us/industrial-dust-fume-mist/hydraulic/
+    - name: Eaton
+      catalog_url: https://www.eaton.com/us/en-us/products/fluid-conveyance/filtration.html
+    - name: MP Filtri
+      catalog_url: https://www.mpfiltri.com/en/products/
+  comparison_queries:
+    - 'site:eng-tips.com "Parker" "HYDAC" hydraulic filter comparison'
+    - 'site:eng-tips.com "Pall" "Donaldson" hydraulic filter'
+    - 'site:reddit.com/r/hydraulics filter brand recommendation'
+
+# Phase 4 — Selection Reasoning
+phase4:
+  selection_queries:
+    - 'site:eng-tips.com "how to select" hydraulic filter'
+    - 'site:eng-tips.com "sizing" hydraulic filter element'
+    - 'site:eng-tips.com "cleanliness requirement" hydraulic component'
+    - 'site:eng-tips.com "ISO 4406" "beta ratio" selection'
+    - 'site:reddit.com/r/hydraulics "filter selection"'
+    - 'site:reddit.com/r/hydraulics "micron rating" select'
+
+# Phase 5 — Failure Modes
+phase5:
+  failure_queries:
+    - 'site:eng-tips.com hydraulic filter "premature failure"'
+    - 'site:eng-tips.com "filter bypass" hydraulic system'
+    - 'site:eng-tips.com hydraulic contamination problem diagnosis'
+    - 'site:reddit.com/r/hydraulics hydraulic filter problem'
+    - 'site:reddit.com/r/hydraulics contamination failure'
