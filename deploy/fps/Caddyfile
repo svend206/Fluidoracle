@@ -1,0 +1,62 @@
+# =============================================================
+# Hydraulic Filter Expert — Caddy Reverse Proxy Configuration
+# =============================================================
+# Caddy sits in front of the FastAPI app, handling:
+#   - TLS termination (Cloudflare origin certificates)
+#   - Reverse proxy to the app container
+#   - Static asset caching
+#   - Gzip compression
+#   - Security headers
+#
+# SSL flow: User → Cloudflare (public TLS) → Caddy (origin TLS) → FastAPI
+# Cloudflare "Full (Strict)" mode validates the origin cert is Cloudflare-signed.
+# =============================================================
+
+sprayoracle.com {
+    # TLS with Cloudflare origin certificates
+    tls /etc/caddy/certs/origin.pem /etc/caddy/certs/origin-key.pem
+
+    # Proxy all requests to the FastAPI app
+    reverse_proxy app:8000 {
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-For {remote_host}
+        header_up X-Forwarded-Proto {scheme}
+
+        # Flush SSE events immediately — without this, Caddy buffers the
+        # upstream response and the token-by-token streaming never reaches
+        # the browser until the full response is complete.
+        flush_interval -1
+    }
+
+    # Cache static assets aggressively
+    # Vite puts content hashes in filenames, so immutable caching is safe
+    @static path /assets/*
+    header @static Cache-Control "public, max-age=31536000, immutable"
+
+    @favicon path /favicon.svg
+    header @favicon Cache-Control "public, max-age=86400"
+
+    # Gzip compression for text responses — but NOT for SSE streams.
+    # Gzip buffers the entire response before compressing, which defeats
+    # token-by-token streaming.
+    @notStreaming {
+        not path /api/ask/stream
+        not path /api/consult/sessions/*/messages/stream
+    }
+    encode @notStreaming gzip
+
+    # Security headers
+    header {
+        X-Content-Type-Options nosniff
+        X-Frame-Options DENY
+        Referrer-Policy strict-origin-when-cross-origin
+        # Remove the Server header (don't leak Caddy version)
+        -Server
+    }
+}
+
+# Redirect www to apex domain
+www.sprayoracle.com {
+    tls /etc/caddy/certs/origin.pem /etc/caddy/certs/origin-key.pem
+    redir https://sprayoracle.com{uri} permanent
+}

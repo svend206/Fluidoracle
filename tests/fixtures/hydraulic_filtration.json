@@ -1,0 +1,224 @@
+{
+  "meta": {
+    "description": "FilterOracle test fixtures derived from Eaton customer success stories",
+    "sources": [
+      "Return-line filters deliver reliable performance to keep mining equipment working on schedule (Eaton, 2021)",
+      "Custom designed filter system reduces weight in wind turbine gearboxes (Eaton, 2021)",
+      "Reliable filtration in the Siberian winter with duplex filter (Eaton, 2021)",
+      "Hydraulics and lubrication high pressure filters on board high speed trains (Eaton, 2016)"
+    ],
+    "scoring": "keyword_match — response must contain N of M required terms to pass"
+  },
+  "test_cases": [
+
+    {
+      "id": "mining-01",
+      "case_study": "mining",
+      "title": "Return-line filter type for mining vehicles",
+      "question": "A European mining equipment manufacturer needs hydraulic filters for their vehicles extracting copper and coal. The system uses ISO VG 32 and 46 hydraulic fluid, operating temperatures of 68 to 158°F, working pressure up to 145 psi, and flow rates between 26 and 106 gal/min. What type of filter is appropriate for this application and where should it be placed?",
+      "required_keywords": ["return", "tank", "145", "bypass", "flow"],
+      "required_concepts": [
+        ["return line", "return-line", "return filter"],
+        ["bypass valve", "bypass setting", "bypass pressure"],
+        ["flow rate", "gal/min", "L/min"],
+        ["element", "media", "glass fiber"]
+      ],
+      "min_concepts": 3,
+      "must_not_contain": [],
+      "confidence_floor": "LOW"
+    },
+
+    {
+      "id": "mining-02",
+      "case_study": "mining",
+      "title": "Fixed maintenance schedule and DP monitoring",
+      "question": "A mining equipment operator changes hydraulic filter elements on a fixed calendar schedule regardless of actual usage. Filter performance was poor with the original specified elements, causing unscheduled replacements and extended downtime. What monitoring approach and filter features would you recommend to better manage element service life and avoid unscheduled maintenance?",
+      "required_keywords": ["differential", "indicator", "pressure"],
+      "required_concepts": [
+        ["differential pressure", "delta P", "ΔP", "dp indicator"],
+        ["bypass", "bypass valve"],
+        ["service life", "element life", "dirt-holding", "loading"],
+        ["particle counter", "oil sampling", "condition monitoring", "cleanliness"]
+      ],
+      "min_concepts": 3,
+      "must_not_contain": [],
+      "confidence_floor": "LOW"
+    },
+
+    {
+      "id": "mining-03",
+      "case_study": "mining",
+      "title": "ISO VG 32 vs 46 cold start ΔP implications",
+      "question": "Mining vehicles operate with ISO VG 32 or VG 46 hydraulic fluid across a temperature range of 68 to 158°F. The maximum working pressure is 145 psi on the return line. What are the cold-start implications for filter sizing, and how should the bypass valve setting be selected relative to the element collapse pressure rating?",
+      "required_keywords": ["viscosity", "cold", "bypass", "collapse"],
+      "required_concepts": [
+        ["cold start", "cold oil", "low temperature"],
+        ["viscosity", "cSt", "SUS"],
+        ["collapse", "burst", "collapse pressure"],
+        ["bypass valve", "bypass setting"],
+        ["safety factor", "margin", "2x", "2×"]
+      ],
+      "min_concepts": 4,
+      "must_not_contain": [],
+      "confidence_floor": "LOW"
+    },
+
+    {
+      "id": "wind-01",
+      "case_study": "wind_turbine",
+      "title": "Filtration requirements for wind turbine gearboxes",
+      "question": "A wind turbine manufacturer wants to reduce weight in their nacelle gearboxes while maintaining high filtration quality. The turbines operate continuously at remote locations. What are the key filtration requirements and considerations for wind turbine gearbox lubrication oil filtration?",
+      "required_keywords": ["gearbox", "cleanliness", "remote"],
+      "required_concepts": [
+        ["gearbox", "gear", "lubrication"],
+        ["cleanliness", "ISO code", "contamination"],
+        ["remote", "maintenance", "downtime", "accessibility"],
+        ["continuous", "duty cycle", "service life"],
+        ["duplex", "offline", "kidney loop", "bypass"]
+      ],
+      "min_concepts": 3,
+      "must_not_contain": [],
+      "confidence_floor": "MEDIUM"
+    },
+
+    {
+      "id": "wind-02",
+      "case_study": "wind_turbine",
+      "title": "Weight reduction vs filtration performance trade-off",
+      "question": "Wind turbine engineers are trying to reduce the weight of gearbox-integrated filtration systems. What design approaches allow weight reduction while maintaining the required filtration efficiency? What are the risks of compromising filtration quality in this application?",
+      "required_keywords": ["weight", "element"],
+      "required_concepts": [
+        ["beta ratio", "beta", "filtration efficiency", "efficiency"],
+        ["element", "media", "glass fiber", "synthetic"],
+        ["weight", "compact", "lightweight", "integrated"],
+        ["contamination", "wear", "component life", "particle"]
+      ],
+      "min_concepts": 3,
+      "must_not_contain": [],
+      "confidence_floor": "MEDIUM"
+    },
+
+    {
+      "id": "wind-03",
+      "case_study": "wind_turbine",
+      "title": "Target cleanliness for wind turbine gearbox",
+      "question": "What ISO cleanliness code should be targeted for a wind turbine gearbox lubrication system, and what beta ratio is required to achieve it? The gearbox runs continuously and is difficult to access for maintenance.",
+      "required_keywords": ["ISO", "cleanliness", "beta"],
+      "required_concepts": [
+        ["ISO 4406", "cleanliness code", "ISO code"],
+        ["beta ratio", "beta", "β"],
+        ["16/14", "17/15", "15/13"],
+        ["gearbox", "gear", "bearing"]
+      ],
+      "min_concepts": 3,
+      "must_not_contain": [],
+      "confidence_floor": "MEDIUM"
+    },
+
+    {
+      "id": "siberia-01",
+      "case_study": "siberian_winter",
+      "title": "Duplex filter justification for critical compressor",
+      "question": "A hydrogen production facility in Siberia runs large piston compressors at pressures up to 5,075 psi. The compressors cannot be stopped for filter maintenance without halting production. What type of filter arrangement is appropriate, and why?",
+      "required_keywords": ["duplex", "changeover", "continuous"],
+      "required_concepts": [
+        ["duplex", "duplex filter", "twin filter", "changeover"],
+        ["continuous", "uninterrupted", "without stopping", "online", "operation"],
+        ["element change", "maintenance", "service"],
+        ["high pressure", "pressure rating", "psi", "bar"]
+      ],
+      "min_concepts": 3,
+      "must_not_contain": [],
+      "confidence_floor": "LOW"
+    },
+
+    {
+      "id": "siberia-02",
+      "case_study": "siberian_winter",
+      "title": "Cold start filtration at -58°F",
+      "question": "A compressor lubrication oil filter system must operate reliably in Siberia where temperatures can reach -58°F (-50°C). What are the critical filter design considerations for reliable cold-start performance at these temperatures?",
+      "required_keywords": ["cold", "viscosity", "bypass", "temperature"],
+      "required_concepts": [
+        ["viscosity", "cold start", "low temperature"],
+        ["bypass valve", "bypass", "bypass setting"],
+        ["collapse", "collapse pressure", "element integrity"],
+        ["cold-start ΔP", "pressure drop", "ΔP", "delta P"],
+        ["stainless steel", "material", "seal", "compatibility"]
+      ],
+      "min_concepts": 4,
+      "must_not_contain": [],
+      "confidence_floor": "MEDIUM"
+    },
+
+    {
+      "id": "siberia-03",
+      "case_study": "siberian_winter",
+      "title": "Filter media compatibility with compressor lube oil",
+      "question": "Compressor lube oil for large piston compressors in hydrogen service must maintain lubricating properties under extreme conditions. What filter media type is most appropriate for compressor lubrication oil filtration, and what media compatibility issues should be considered?",
+      "required_keywords": ["media", "glass", "compatibility", "oil"],
+      "required_concepts": [
+        ["glass fiber", "synthetic", "media type"],
+        ["compatibility", "fluid compatibility", "media compatibility"],
+        ["cellulose", "cellulose not recommended", "avoid cellulose"],
+        ["high pressure", "pressure rating", "collapse"]
+      ],
+      "min_concepts": 3,
+      "must_not_contain": [],
+      "confidence_floor": "LOW"
+    },
+
+    {
+      "id": "train-01",
+      "case_study": "high_speed_train",
+      "title": "Filtration for high-pressure servo valve system",
+      "question": "A high-speed tilting train uses a centralized hydraulic power unit with servo valves and piston pumps to control the tilting mechanism. The system operates in a harsh undercarriage environment. What cleanliness level is required for a servo valve system, and what filter rating achieves it?",
+      "required_keywords": ["servo", "cleanliness", "beta", "pressure"],
+      "required_concepts": [
+        ["servo valve", "servo"],
+        ["cleanliness code", "ISO 4406", "15/13", "16/14", "14/12"],
+        ["beta ratio", "beta", "β₃", "β₁₀"],
+        ["high pressure", "inline filter", "pressure filter"],
+        ["contamination", "particle", "wear"]
+      ],
+      "min_concepts": 4,
+      "must_not_contain": [],
+      "confidence_floor": "LOW"
+    },
+
+    {
+      "id": "train-02",
+      "case_study": "high_speed_train",
+      "title": "Centralized vs distributed hydraulic filtration",
+      "question": "A train manufacturer evaluated two hydraulic system designs: one with servo valves and filters distributed front-to-back under each railcar, and one with a centralized power unit with all filtration in one location. What are the filtration advantages of a centralized system design?",
+      "required_keywords": ["centralized", "contamination", "maintenance"],
+      "required_concepts": [
+        ["centralized", "single point", "consolidated"],
+        ["maintenance", "serviceability", "access"],
+        ["contamination control", "cleanliness", "consistent filtration"],
+        ["system reliability", "component life", "protection"]
+      ],
+      "min_concepts": 3,
+      "must_not_contain": [],
+      "confidence_floor": "LOW"
+    },
+
+    {
+      "id": "train-03",
+      "case_study": "high_speed_train",
+      "title": "Filter specification for piston pump protection",
+      "question": "A hydraulic system on a high-speed train uses piston pumps and servo valves in a harsh vibration environment. What filter specifications are needed to protect both the piston pump and the servo valves, and where should the filters be placed in the circuit?",
+      "required_keywords": ["piston pump", "servo", "placement", "pressure"],
+      "required_concepts": [
+        ["piston pump", "pump protection"],
+        ["servo valve", "servo"],
+        ["pressure line", "inline filter", "high pressure filter"],
+        ["return line", "return filter"],
+        ["cleanliness", "ISO code", "beta ratio"]
+      ],
+      "min_concepts": 4,
+      "must_not_contain": ["suction filter", "pump inlet filter"],
+      "confidence_floor": "MEDIUM"
+    }
+
+  ]
+}

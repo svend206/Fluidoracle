@@ -1,0 +1,27 @@
+# Hydraulic Filter Expert — Python Dependencies
+# Install with: py -3.12 -m pip install -r requirements.txt
+
+# --- Vector Database ---
+chromadb>=0.4.0
+
+# --- Embeddings (OpenAI API) ---
+openai>=1.0.0
+
+# --- BM25 Keyword Search ---
+rank_bm25>=0.2.2
+
+# --- Cross-Encoder Reranking (runs locally, no API cost) ---
+sentence-transformers>=2.2.0
+
+# --- Document Loading ---
+pypdf>=3.0.0
+python-docx>=0.8.11
+
+# --- Configuration ---
+python-dotenv>=1.0.0
+
+# --- CLI Display ---
+rich>=13.0.0
+
+# --- Numerical (used by BM25 and cross-encoder) ---
+numpy>=1.24.0
