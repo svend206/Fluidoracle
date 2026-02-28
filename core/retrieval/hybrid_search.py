@@ -68,7 +68,7 @@ from .ingest import load_bm25_index, tokenize_for_bm25
 _openai_client = None
 _chroma_client = None
 _cross_encoder = None
-_bm25_data = None
+_bm25_data = {}  # keyed by index path
 
 
 def _get_openai():
@@ -85,14 +85,15 @@ def _get_chroma():
     return _chroma_client
 
 
-def _get_bm25_index():
-    """Load BM25 index into memory once; reuse on subsequent calls (~263MB)."""
+def _get_bm25_index(bm25_index_path: str | None = None):
+    """Load BM25 index into memory once per path; reuse on subsequent calls (~263MB each)."""
     global _bm25_data
-    if _bm25_data is None:
+    cache_key = str(bm25_index_path or "default")
+    if cache_key not in _bm25_data:
         if VERBOSE:
             print("  Loading BM25 index into memory (first call)...")
-        _bm25_data = load_bm25_index()
-    return _bm25_data
+        _bm25_data[cache_key] = load_bm25_index(index_path=bm25_index_path)
+    return _bm25_data[cache_key]
 
 
 def _get_cross_encoder():
@@ -114,17 +115,20 @@ def _semantic_search(
     query: str,
     top_k: int = SEMANTIC_TOP_K,
     where_filter: dict | None = None,
+    child_collection: str | None = None,
 ) -> list[dict]:
     """Search child chunks using cosine similarity on embeddings.
     
     Args:
         where_filter: Optional ChromaDB where clause for metadata filtering.
             Example: {"source": "REFERENCE-ISO-Cleanliness-Codes.md"}
+        child_collection: Override the default child collection name.
     """
     client = _get_chroma()
+    collection_name = child_collection or CHILD_COLLECTION
 
     try:
-        collection = client.get_collection(name=CHILD_COLLECTION)
+        collection = client.get_collection(name=collection_name)
     except Exception:
         if VERBOSE:
             print("  [!] Child collection not found. Have you ingested documents?")
@@ -173,6 +177,7 @@ def _bm25_search(
     query: str,
     top_k: int = BM25_TOP_K,
     metadata_filter: dict | None = None,
+    bm25_index_path: str | None = None,
 ) -> list[dict]:
     """Search child chunks using BM25 keyword matching.
     
@@ -180,8 +185,9 @@ def _bm25_search(
         metadata_filter: Optional dict for post-hoc metadata filtering.
             Only simple equality filters are supported (e.g., {"source": "file.md"}).
             Complex ChromaDB operators ($contains, $gt, etc.) are NOT supported here.
+        bm25_index_path: Override the default BM25 index file path.
     """
-    bm25_data = _get_bm25_index()
+    bm25_data = _get_bm25_index(bm25_index_path=bm25_index_path)
     if bm25_data is None:
         if VERBOSE:
             print("  [!] BM25 index not found. Run: py -3.12 ingest.py --rebuild-bm25")
@@ -340,16 +346,17 @@ def _merge_results(
 # Stage 2: Parent-Child Resolution
 # ===========================================================================
 
-def _resolve_parents(candidates: list[dict]) -> list[dict]:
+def _resolve_parents(candidates: list[dict], parent_collection: str | None = None) -> list[dict]:
     """For each matched child chunk, fetch the corresponding parent chunk.
     
     Deduplicates: if multiple children point to the same parent,
     keep the child with the highest score and return the parent once.
     """
     client = _get_chroma()
+    collection_name = parent_collection or PARENT_COLLECTION
 
     try:
-        parent_col = client.get_collection(name=PARENT_COLLECTION)
+        parent_col = client.get_collection(name=collection_name)
     except Exception:
         # No parent collection — fall back to using child text as context
         if VERBOSE:
@@ -443,6 +450,9 @@ def search(
     semantic_weight: float | None = None,
     bm25_weight: float | None = None,
     metadata_filter: dict | None = None,
+    child_collection: str | None = None,
+    parent_collection: str | None = None,
+    bm25_index_path: str | None = None,
 ) -> list[dict]:
     """Execute the full hybrid retrieval pipeline.
     
@@ -456,6 +466,9 @@ def search(
         metadata_filter: Optional ChromaDB where clause for metadata filtering.
             Example: {"source": "REFERENCE-ISO-Cleanliness-Codes.md"}
             Example: {"section_header": {"$contains": "Beta"}}
+        child_collection: Override the default ChromaDB child collection name.
+        parent_collection: Override the default ChromaDB parent collection name.
+        bm25_index_path: Override the default BM25 index file path.
     
     Returns:
         List of result dicts, each containing:
@@ -484,8 +497,8 @@ def search(
     if VERBOSE:
         print("  Stage 1: Hybrid search (semantic + BM25)...")
     
-    semantic_hits = _semantic_search(query, where_filter=metadata_filter)
-    bm25_hits = _bm25_search(query, metadata_filter=metadata_filter)
+    semantic_hits = _semantic_search(query, where_filter=metadata_filter, child_collection=child_collection)
+    bm25_hits = _bm25_search(query, metadata_filter=metadata_filter, bm25_index_path=bm25_index_path)
 
     if VERBOSE:
         print(f"    Semantic: {len(semantic_hits)} hits | BM25: {len(bm25_hits)} hits")
@@ -508,7 +521,7 @@ def search(
     if VERBOSE:
         print("  Stage 2: Resolving parent chunks...")
 
-    resolved = _resolve_parents(candidates)
+    resolved = _resolve_parents(candidates, parent_collection=parent_collection)
 
     if VERBOSE:
         print(f"    Resolved to {len(resolved)} unique parent chunks")

@@ -330,10 +330,15 @@ def tokenize_for_bm25(text: str) -> list[str]:
     return tokens
 
 
-def build_bm25_index(child_collection_name: str = CHILD_COLLECTION):
+def build_bm25_index(
+    child_collection_name: str = CHILD_COLLECTION,
+    bm25_output_path: str | Path | None = None,
+):
     """Build (or rebuild) the BM25 keyword index from all child chunks in ChromaDB.
 
-    Saves the index to disk so it persists across sessions.
+    Args:
+        child_collection_name: ChromaDB collection to index.
+        bm25_output_path: Where to save the pickle. Defaults to BM25_INDEX_PATH / "bm25_index.pkl".
     """
     from rank_bm25 import BM25Okapi
 
@@ -376,7 +381,8 @@ def build_bm25_index(child_collection_name: str = CHILD_COLLECTION):
         "tokenized_corpus": tokenized_corpus,
     }
 
-    index_path = BM25_INDEX_PATH / "bm25_index.pkl"
+    index_path = Path(bm25_output_path) if bm25_output_path else BM25_INDEX_PATH / "bm25_index.pkl"
+    index_path.parent.mkdir(parents=True, exist_ok=True)
     with open(index_path, "wb") as f:
         pickle.dump(index_data, f)
 
@@ -384,12 +390,16 @@ def build_bm25_index(child_collection_name: str = CHILD_COLLECTION):
         print(f"  BM25 index built: {len(ids)} chunks indexed → {index_path}")
 
 
-def load_bm25_index() -> dict | None:
-    """Load the BM25 index from disk. Returns None if not found."""
-    index_path = BM25_INDEX_PATH / "bm25_index.pkl"
-    if not index_path.exists():
+def load_bm25_index(index_path: str | Path | None = None) -> dict | None:
+    """Load the BM25 index from disk. Returns None if not found.
+
+    Args:
+        index_path: Path to the BM25 pickle. Defaults to BM25_INDEX_PATH / "bm25_index.pkl".
+    """
+    path = Path(index_path) if index_path else BM25_INDEX_PATH / "bm25_index.pkl"
+    if not path.exists():
         return None
-    with open(index_path, "rb") as f:
+    with open(path, "rb") as f:
         return pickle.load(f)
 
 
@@ -446,6 +456,9 @@ def ingest_document(
     filepath: str,
     collection: str = "reference",
     tags: str = "",
+    child_collection_name: str | None = None,
+    parent_collection_name: str | None = None,
+    bm25_output_path: str | None = None,
 ):
     """Full ingestion pipeline for a single document.
     
@@ -496,16 +509,18 @@ def ingest_document(
     print(f"  Generated {len(child_embeddings)} embeddings")
 
     # Step 4: Store in ChromaDB
+    _parent_col = parent_collection_name or PARENT_COLLECTION
+    _child_col = child_collection_name or CHILD_COLLECTION
     print("\n[4/5] Storing in ChromaDB...")
-    store_chunks(parent_chunks, PARENT_COLLECTION, embeddings=None)
-    print(f"  Stored {len(parent_chunks)} parent chunks in '{PARENT_COLLECTION}'")
+    store_chunks(parent_chunks, _parent_col, embeddings=None)
+    print(f"  Stored {len(parent_chunks)} parent chunks in '{_parent_col}'")
 
-    store_chunks(child_chunks, CHILD_COLLECTION, embeddings=child_embeddings)
-    print(f"  Stored {len(child_chunks)} child chunks in '{CHILD_COLLECTION}'")
+    store_chunks(child_chunks, _child_col, embeddings=child_embeddings)
+    print(f"  Stored {len(child_chunks)} child chunks in '{_child_col}'")
 
     # Step 5: Rebuild BM25 index
     print("\n[5/5] Rebuilding BM25 keyword index...")
-    build_bm25_index()
+    build_bm25_index(child_collection_name=_child_col, bm25_output_path=bm25_output_path)
 
     print(f"\n{'='*60}")
     print(f"DONE: {filename}")
@@ -575,34 +590,88 @@ def show_status():
 # CLI
 # ===========================================================================
 
+def _resolve_vertical_config(platform_id: str | None, vertical_id: str | None):
+    """Load vertical config if platform/vertical specified, else return None tuple."""
+    if not platform_id or not vertical_id:
+        return None, None, None
+    try:
+        import sys
+        sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+        from core.vertical_loader import get_vertical_config
+        vc = get_vertical_config(platform_id, vertical_id)
+        return vc.child_collection, vc.parent_collection, vc.bm25_index_path
+    except Exception as e:
+        print(f"[!] Could not load vertical config: {e}")
+        print("    Falling back to default collection names.")
+        return None, None, None
+
+
 def main():
     parser = argparse.ArgumentParser(
-        description="Hydraulic Filter Expert — Document Ingestion Pipeline v2",
+        description="Fluidoracle — Document Ingestion Pipeline",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  py -3.12 ingest.py "C:\\docs\\spray-guide.pdf" --collection reference --tags "spray-systems,general"
-  py -3.12 ingest.py "C:\\docs\\textbook.pdf" --collection textbook --tags "fluid-mechanics"
-  py -3.12 ingest.py --status
-  py -3.12 ingest.py --rebuild-bm25
+  # Ingest into a specific vertical
+  python -m core.retrieval.ingest --platform fps --vertical hydraulic_filtration doc.md
+
+  # Ingest with default collection names (backward compatible)
+  python -m core.retrieval.ingest doc.md --collection reference --tags "filtration"
+
+  # Status and rebuild
+  python -m core.retrieval.ingest --status
+  python -m core.retrieval.ingest --rebuild-bm25 --platform fps --vertical hydraulic_filtration
         """,
     )
     parser.add_argument("filepath", nargs="?", help="Path to the document to ingest")
     parser.add_argument("--collection", default="reference", help="Collection tag (default: reference)")
     parser.add_argument("--tags", default="", help="Comma-separated tags for this document")
+    parser.add_argument("--platform", default=None, help="Platform ID (e.g., fps, fds)")
+    parser.add_argument("--vertical", default=None, help="Vertical ID (e.g., hydraulic_filtration)")
+    parser.add_argument("--source-dir", default=None, help="Ingest all .md files from this directory")
     parser.add_argument("--status", action="store_true", help="Show knowledge base status")
     parser.add_argument("--rebuild-bm25", action="store_true", help="Rebuild the BM25 keyword index")
 
     args = parser.parse_args()
 
+    # Resolve vertical-specific collection names
+    child_col, parent_col, bm25_path = _resolve_vertical_config(args.platform, args.vertical)
+
     if args.status:
         show_status()
     elif args.rebuild_bm25:
         print("Rebuilding BM25 index...")
-        build_bm25_index()
+        build_bm25_index(
+            child_collection_name=child_col or CHILD_COLLECTION,
+            bm25_output_path=bm25_path,
+        )
         print("Done.")
+    elif args.source_dir:
+        # Batch ingest all .md files from a directory
+        source_dir = Path(args.source_dir)
+        if not source_dir.exists():
+            print(f"[!] Source directory not found: {source_dir}")
+            sys.exit(1)
+        md_files = sorted(source_dir.glob("*.md"))
+        if not md_files:
+            print(f"[!] No .md files found in {source_dir}")
+            sys.exit(1)
+        print(f"Found {len(md_files)} documents to ingest from {source_dir}")
+        for f in md_files:
+            ingest_document(
+                str(f), args.collection, args.tags,
+                child_collection_name=child_col,
+                parent_collection_name=parent_col,
+                bm25_output_path=bm25_path,
+            )
+        print(f"\nAll {len(md_files)} documents ingested.")
     elif args.filepath:
-        ingest_document(args.filepath, args.collection, args.tags)
+        ingest_document(
+            args.filepath, args.collection, args.tags,
+            child_collection_name=child_col,
+            parent_collection_name=parent_col,
+            bm25_output_path=bm25_path,
+        )
     else:
         parser.print_help()
 
