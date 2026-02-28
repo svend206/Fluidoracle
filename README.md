@@ -19,7 +19,7 @@ frontend/           React + Vite + Tailwind SPA
 vector-store/       Per-vertical ChromaDB + BM25 indexes
 tests/              Test fixtures and integration tests
 deploy/             Per-platform Docker/Caddy deployment configs
-docs/               Platform documentation (CPVP, business model, architecture)
+docs/               Platform documentation (CPVP, business model, compute strategy)
 ```
 
 ## Development
@@ -41,6 +41,13 @@ python -m core.retrieval.ingest --platform fps --vertical hydraulic_filtration
 # Run tests
 python -m tests.run_tests --vertical hydraulic_filtration
 ```
+
+## Key Documentation
+
+- **[Compute Strategy](docs/compute-strategy.md)** — LLM vs. deterministic code decision matrix. **Read this before writing any new feature.** Defines when to use LLM calls vs. Python/SQL, confidence scoring, pre-computation injection patterns, and cost monitoring.
+- **[CPVP](docs/cpvp.md)** — Component Performance Verification Protocol
+- **[Business Model](docs/business-model.md)** — Platform revenue and growth model
+- **[Fluid Database Design](docs/fluid-database-design.md)** — oracle.db schema and fluid property lookups
 
 ## Static Site
 
