@@ -84,6 +84,15 @@ def init_vertical(vertical_config) -> None:
     ANSWERING_SYSTEM_PROMPT_TEMPLATE = vertical_config.answering_prompt
 
 
+def _retrieval_kwargs(vc) -> dict:
+    """Build retrieval keyword args from a VerticalConfig."""
+    return {
+        "child_collection": vc.child_collection,
+        "parent_collection": vc.parent_collection,
+        "bm25_index_path": vc.bm25_index_path,
+    }
+
+
 def _enrich_profile_with_precompute(application_profile: str, params: dict | None) -> str:
     """Append pre-computed engineering values to an application profile."""
     if params:
@@ -96,9 +105,9 @@ def _enrich_profile_with_precompute(application_profile: str, params: dict | Non
     return application_profile
 
 
-def _get_answering_prompt(application_profile: str, rag_context: str) -> str:
+def _get_answering_prompt(application_profile: str, rag_context: str, template: str | None = None) -> str:
     """Build the answering system prompt with RAG context injected."""
-    base = ANSWERING_SYSTEM_PROMPT_TEMPLATE or ""
+    base = template or ANSWERING_SYSTEM_PROMPT_TEMPLATE or ""
     return base + f"""
 
 ADDITIONAL CONTEXT FOR THIS RESPONSE:
@@ -412,7 +421,12 @@ def _call_claude_stream(system: str, messages: list[dict], max_tokens: int = 400
 # RAG Retrieval
 # ===========================================================================
 
-def _run_retrieval(query: str) -> dict:
+def _run_retrieval(
+    query: str,
+    child_collection: str | None = None,
+    parent_collection: str | None = None,
+    bm25_index_path: str | None = None,
+) -> dict:
     """Run the hybrid retrieval pipeline and return structured results."""
     try:
         rag_result = verified_query(
@@ -421,6 +435,9 @@ def _run_retrieval(query: str) -> dict:
             use_reranker=True,
             semantic_weight=0.70,
             bm25_weight=0.30,
+            child_collection=child_collection,
+            parent_collection=parent_collection,
+            bm25_index_path=bm25_index_path,
         )
     except Exception as e:
         logger.error(f"RAG retrieval failed: {e}")
@@ -502,6 +519,7 @@ def generate_consultation_response(
     gathered_parameters: dict | None = None,
     gathering_turn_count: int = 0,
     force_transition: bool = False,
+    vertical_config=None,
 ) -> dict:
     """Generate a consultation response with phase-aware logic.
 
@@ -513,6 +531,8 @@ def generate_consultation_response(
         gathered_parameters: Accumulated parameters from gathering phase
         gathering_turn_count: Number of user messages in gathering phase so far
         force_transition: If True, instruct Claude to transition immediately
+        vertical_config: VerticalConfig for this session's vertical. If None, uses
+            module-level defaults from init_vertical().
 
     Returns:
         {
@@ -526,19 +546,32 @@ def generate_consultation_response(
             "rag_chunks_used": list[str] | None,
         }
     """
+    # Resolve prompts and retrieval config from vertical_config or module defaults
+    vc = vertical_config
+    gathering_prompt = vc.gathering_prompt if vc else GATHERING_SYSTEM_PROMPT
+    answering_prompt = vc.answering_prompt if vc else ANSWERING_SYSTEM_PROMPT_TEMPLATE
+    vid = vc.vertical_id if vc else _current_vertical_id
+    retrieval_kwargs = _retrieval_kwargs(vc) if vc else {}
+
     if phase == "gathering":
         return _handle_gathering_phase(
             user_message=user_message,
             conversation_history=conversation_history,
             gathering_turn_count=gathering_turn_count,
             force_transition=force_transition,
+            gathering_prompt=gathering_prompt,
+            answering_prompt=answering_prompt,
+            vertical_id=vid,
+            retrieval_kwargs=retrieval_kwargs,
         )
     else:
-        # answering or complete phase — always do RAG
         return _handle_answering_phase(
             user_message=user_message,
             conversation_history=conversation_history,
             gathered_parameters=gathered_parameters,
+            answering_prompt=answering_prompt,
+            vertical_id=vid,
+            retrieval_kwargs=retrieval_kwargs,
         )
 
 
@@ -552,11 +585,15 @@ def _handle_gathering_phase(
     conversation_history: list[dict],
     gathering_turn_count: int,
     force_transition: bool = False,
+    gathering_prompt: str | None = None,
+    answering_prompt: str | None = None,
+    vertical_id: str | None = None,
+    retrieval_kwargs: dict | None = None,
 ) -> dict:
     """Handle a turn during the gathering phase."""
 
     # Build system prompt, potentially with nudge or force transition
-    system = GATHERING_SYSTEM_PROMPT
+    system = gathering_prompt or GATHERING_SYSTEM_PROMPT
     if force_transition:
         system += FORCE_TRANSITION_INSTRUCTION
     elif gathering_turn_count >= MAX_GATHERING_TURNS:
@@ -599,7 +636,7 @@ def _handle_gathering_phase(
         )
 
         # Run RAG retrieval on the refined query
-        rag_result = _run_retrieval(retrieval_query)
+        rag_result = _run_retrieval(retrieval_query, **(retrieval_kwargs or {}))
         rag_context, chunk_ids = _build_rag_context(rag_result)
 
         # Format the application profile from gathered parameters
@@ -610,15 +647,18 @@ def _handle_gathering_phase(
         else:
             application_profile = "(No structured parameters extracted)"
 
+        _vid = vertical_id or _current_vertical_id
         application_profile = _enrich_profile_with_precompute(application_profile, params)
 
         # Build the answering system prompt with context filled in
-        answering_prompt = _get_answering_prompt(
+        _ans_tmpl = answering_prompt or ANSWERING_SYSTEM_PROMPT_TEMPLATE
+        answering_prompt_built = _get_answering_prompt(
             application_profile=application_profile,
             rag_context=rag_context,
+            template=_ans_tmpl,
         )
         # Append the initial recommendation format instructions
-        answering_prompt += "\n\n" + INITIAL_RECOMMENDATION_FORMAT
+        answering_prompt_built += "\n\n" + INITIAL_RECOMMENDATION_FORMAT
 
         # Build full conversation + user message for answering call
         answering_messages = []
@@ -628,7 +668,7 @@ def _handle_gathering_phase(
 
         # Call Claude again with full context for the grounded recommendation
         answer_text, answer_model = _call_claude(
-            system=answering_prompt,
+            system=answering_prompt_built,
             messages=answering_messages,
             max_tokens=8000,
         )
@@ -675,11 +715,14 @@ def _handle_answering_phase(
     user_message: str,
     conversation_history: list[dict],
     gathered_parameters: dict | None = None,
+    answering_prompt: str | None = None,
+    vertical_id: str | None = None,
+    retrieval_kwargs: dict | None = None,
 ) -> dict:
     """Handle a follow-up turn during the answering phase."""
 
     # Run RAG on the latest user message for follow-up context
-    rag_result = _run_retrieval(user_message)
+    rag_result = _run_retrieval(user_message, **(retrieval_kwargs or {}))
     rag_context, chunk_ids = _build_rag_context(rag_result)
 
     # Format application profile
@@ -688,11 +731,13 @@ def _handle_answering_phase(
         application_profile = "\n".join(profile_lines)
     else:
         application_profile = "(See conversation history for application details)"
+    _vid = vertical_id or _current_vertical_id
     application_profile = _enrich_profile_with_precompute(application_profile, gathered_parameters)
 
-    answering_prompt = _get_answering_prompt(
+    answering_prompt_built = _get_answering_prompt(
         application_profile=application_profile,
         rag_context=rag_context,
+        template=answering_prompt,
     )
 
     # Build messages with full history
@@ -702,7 +747,7 @@ def _handle_answering_phase(
     messages.append({"role": "user", "content": user_message})
 
     response_text, model_used = _call_claude(
-        system=answering_prompt,
+        system=answering_prompt_built,
         messages=messages,
         max_tokens=6000,
     )
@@ -739,6 +784,7 @@ def generate_consultation_response_stream(
     gathered_parameters: dict | None = None,
     gathering_turn_count: int = 0,
     force_transition: bool = False,
+    vertical_config=None,
 ):
     """Streaming version of generate_consultation_response.
 
@@ -749,18 +795,31 @@ def generate_consultation_response_stream(
       ("done", dict)            — final result dict (content, phase, rag_chunks_used, etc.)
       ("error", str)            — error message
     """
+    vc = vertical_config
+    gathering_prompt = vc.gathering_prompt if vc else GATHERING_SYSTEM_PROMPT
+    answering_prompt = vc.answering_prompt if vc else ANSWERING_SYSTEM_PROMPT_TEMPLATE
+    vid = vc.vertical_id if vc else _current_vertical_id
+    retrieval_kwargs = _retrieval_kwargs(vc) if vc else {}
+
     if phase == "gathering":
         yield from _handle_gathering_phase_stream(
             user_message=user_message,
             conversation_history=conversation_history,
             gathering_turn_count=gathering_turn_count,
             force_transition=force_transition,
+            gathering_prompt=gathering_prompt,
+            answering_prompt=answering_prompt,
+            vertical_id=vid,
+            retrieval_kwargs=retrieval_kwargs,
         )
     else:
         yield from _handle_answering_phase_stream(
             user_message=user_message,
             conversation_history=conversation_history,
             gathered_parameters=gathered_parameters,
+            answering_prompt=answering_prompt,
+            vertical_id=vid,
+            retrieval_kwargs=retrieval_kwargs,
         )
 
 
@@ -769,11 +828,15 @@ def _handle_gathering_phase_stream(
     conversation_history: list[dict],
     gathering_turn_count: int,
     force_transition: bool = False,
+    gathering_prompt: str | None = None,
+    answering_prompt: str | None = None,
+    vertical_id: str | None = None,
+    retrieval_kwargs: dict | None = None,
 ):
     """Streaming gathering phase. If no transition, stream the response.
     If transition detected, do RAG then stream the answering call.
     """
-    system = GATHERING_SYSTEM_PROMPT
+    system = gathering_prompt or GATHERING_SYSTEM_PROMPT
     if force_transition:
         system += FORCE_TRANSITION_INSTRUCTION
     elif gathering_turn_count >= MAX_GATHERING_TURNS:
@@ -828,7 +891,7 @@ def _handle_gathering_phase_stream(
 
     # Now do RAG retrieval
     yield ("status", "Searching knowledge base...")
-    rag_result = _run_retrieval(retrieval_query)
+    rag_result = _run_retrieval(retrieval_query, **(retrieval_kwargs or {}))
     rag_context, chunk_ids = _build_rag_context(rag_result)
 
     # Build answering prompt
@@ -840,12 +903,14 @@ def _handle_gathering_phase_stream(
         application_profile = "(No structured parameters extracted)"
     application_profile = _enrich_profile_with_precompute(application_profile, params)
 
-    answering_prompt = _get_answering_prompt(
+    _ans_tmpl = answering_prompt or ANSWERING_SYSTEM_PROMPT_TEMPLATE
+    answering_prompt_built = _get_answering_prompt(
         application_profile=application_profile,
         rag_context=rag_context,
+        template=_ans_tmpl,
     )
     # Append the initial recommendation format instructions
-    answering_prompt += "\n\n" + INITIAL_RECOMMENDATION_FORMAT
+    answering_prompt_built += "\n\n" + INITIAL_RECOMMENDATION_FORMAT
 
     answering_messages = []
     for msg in conversation_history:
@@ -872,7 +937,7 @@ def _handle_gathering_phase_stream(
     BUFFER_FALLBACK_LIMIT = 500
 
     for event_type, data in _call_claude_stream(
-        system=answering_prompt,
+        system=answering_prompt_built,
         messages=answering_messages,
         max_tokens=8000,
     ):
@@ -968,10 +1033,13 @@ def _handle_answering_phase_stream(
     user_message: str,
     conversation_history: list[dict],
     gathered_parameters: dict | None = None,
+    answering_prompt: str | None = None,
+    vertical_id: str | None = None,
+    retrieval_kwargs: dict | None = None,
 ):
     """Stream a follow-up answer in the answering phase."""
     yield ("status", "Searching knowledge base...")
-    rag_result = _run_retrieval(user_message)
+    rag_result = _run_retrieval(user_message, **(retrieval_kwargs or {}))
     rag_context, chunk_ids = _build_rag_context(rag_result)
 
     if gathered_parameters:
@@ -981,9 +1049,10 @@ def _handle_answering_phase_stream(
         application_profile = "(See conversation history for application details)"
     application_profile = _enrich_profile_with_precompute(application_profile, gathered_parameters)
 
-    answering_prompt = _get_answering_prompt(
+    answering_prompt_built = _get_answering_prompt(
         application_profile=application_profile,
         rag_context=rag_context,
+        template=answering_prompt,
     )
 
     messages = []
@@ -996,7 +1065,7 @@ def _handle_answering_phase_stream(
 
     streamed_text = ""
     for event_type, data in _call_claude_stream(
-        system=answering_prompt,
+        system=answering_prompt_built,
         messages=messages,
         max_tokens=6000,
     ):

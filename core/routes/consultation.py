@@ -25,13 +25,30 @@ from core.vertical_loader import load_platform
 
 PLATFORM_ID = os.getenv("PLATFORM_ID", "fps")
 
+logger = logging.getLogger(__name__)
+
+
+def _resolve_vertical_config(session: dict):
+    """Look up the VerticalConfig for a session's vertical_id.
+    Returns None if the vertical can't be resolved (falls back to module defaults).
+    """
+    vid = session.get("vertical_id")
+    pid = session.get("platform_id") or PLATFORM_ID
+    if not vid:
+        return None
+    try:
+        platform = load_platform(pid)
+        return platform.verticals.get(vid)
+    except Exception:
+        return None
+
+
 async def get_current_user(authorization):
     if not authorization or not authorization.startswith("Bearer "):
         return None
     token = authorization.replace("Bearer ", "")
     return await database.get_user_by_token(token)
 
-logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -126,6 +143,9 @@ async def send_consult_message(session_id: str, req: ConsultMessageRequest):
     if session["phase"] == "gathering":
         gathering_turn_count += 1  # Include current message
 
+    # Resolve vertical config for this session
+    _vc = _resolve_vertical_config(session)
+
     # Generate AI response
     from core.consultation_engine import generate_consultation_response, generate_session_title
 
@@ -138,6 +158,7 @@ async def send_consult_message(session_id: str, req: ConsultMessageRequest):
             gathered_parameters=session.get("gathered_parameters"),
             gathering_turn_count=gathering_turn_count,
             force_transition=is_force_transition,
+            vertical_config=_vc,
         )
     except Exception as e:
         logger.error(f"Consultation response failed: {e}")
@@ -273,6 +294,9 @@ async def send_consult_message_stream(session_id: str, req: ConsultMessageReques
     if session["phase"] == "gathering":
         gathering_turn_count += 1
 
+    # Resolve vertical config for this session
+    _vc = _resolve_vertical_config(session)
+
     from core.consultation_engine import generate_consultation_response_stream, generate_session_title
 
     async def event_generator():
@@ -288,6 +312,7 @@ async def send_consult_message_stream(session_id: str, req: ConsultMessageReques
                 gathered_parameters=session.get("gathered_parameters"),
                 gathering_turn_count=gathering_turn_count,
                 force_transition=is_force_transition,
+                vertical_config=_vc,
             ):
                 if event_type == "status":
                     yield f"event: status\ndata: {json.dumps({'message': data})}\n\n"

@@ -29,19 +29,26 @@ function NavLink({ to, children }) {
 /** Wrapper that extracts verticalId from URL and passes it to ConsultPage */
 function ConsultRoute() {
   const { verticalId } = useParams()
-  return <ConsultPage verticalId={verticalId} />
+  return <ConsultPage verticalId={verticalId} key={verticalId} />
 }
 
 export default function App() {
-  const [platformName, setPlatformName] = useState('Fluidoracle')
+  const [platformConfig, setPlatformConfig] = useState(null)
+  const location = useLocation()
 
   useEffect(() => {
     getPlatformConfig()
-      .then(config => {
-        if (config?.platform_name) setPlatformName(config.platform_name)
-      })
+      .then(config => setPlatformConfig(config))
       .catch(() => {})
   }, [])
+
+  const platformName = platformConfig?.platform_name || 'Fluidoracle'
+
+  // Detect active vertical from URL
+  const verticalMatch = location.pathname.match(/^\/consult\/([^/]+)/)
+  const activeVerticalId = verticalMatch?.[1]
+  const activeVertical = activeVerticalId && platformConfig?.verticals?.[activeVerticalId]
+  const hasMultipleVerticals = platformConfig?.verticals && Object.keys(platformConfig.verticals).length > 1
 
   return (
     <SiteGate>
@@ -62,7 +69,19 @@ export default function App() {
                 </span>
               </Link>
               <nav className="flex items-center gap-1">
-                <NavLink to="/">Consult</NavLink>
+                {hasMultipleVerticals ? (
+                  <NavLink to="/">Verticals</NavLink>
+                ) : (
+                  <NavLink to="/">Consult</NavLink>
+                )}
+                {activeVertical && hasMultipleVerticals && (
+                  <span className="text-gray-500 text-sm">›</span>
+                )}
+                {activeVertical && hasMultipleVerticals && (
+                  <span className="text-blue-400 text-sm font-medium px-2 py-1">
+                    {activeVertical.short_name || activeVertical.display_name}
+                  </span>
+                )}
                 <NavLink to="/ask">Quick Ask</NavLink>
                 <NavLink to="/browse">Browse</NavLink>
               </nav>

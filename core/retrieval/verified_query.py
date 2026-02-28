@@ -406,6 +406,9 @@ def verified_query(
     use_reranker: bool = True,
     semantic_weight: float | None = None,
     bm25_weight: float | None = None,
+    child_collection: str | None = None,
+    parent_collection: str | None = None,
+    bm25_index_path: str | None = None,
 ) -> dict:
     """Execute a verified query against the knowledge base.
     
@@ -433,6 +436,9 @@ def verified_query(
         use_reranker=use_reranker,
         semantic_weight=semantic_weight,
         bm25_weight=bm25_weight,
+        child_collection=child_collection,
+        parent_collection=parent_collection,
+        bm25_index_path=bm25_index_path,
     )
 
     # Assess confidence
