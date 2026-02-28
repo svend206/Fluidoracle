@@ -36,6 +36,7 @@ print(f"[consultation_engine] Primary model: {CONSULT_MODEL}")
 print(f"[consultation_engine] Fallback model: {FALLBACK_MODEL}")
 
 from core.database import log_llm_usage_sync
+from core.precompute import build_precomputed_context
 from core.retrieval.verified_query import verified_query
 
 # ---------------------------------------------------------------------------
@@ -70,15 +71,29 @@ def _get_client() -> anthropic.Anthropic:
 # Module-level defaults (set by init_vertical)
 GATHERING_SYSTEM_PROMPT: str = ""
 ANSWERING_SYSTEM_PROMPT_TEMPLATE: str = ""
+_current_vertical_id: str = ""
 
 
 def init_vertical(vertical_config) -> None:
     """Initialize module-level prompts from a vertical config."""
-    global GATHERING_SYSTEM_PROMPT, ANSWERING_SYSTEM_PROMPT_TEMPLATE
+    global GATHERING_SYSTEM_PROMPT, ANSWERING_SYSTEM_PROMPT_TEMPLATE, _current_vertical_id
+    _current_vertical_id = vertical_config.vertical_id
     GATHERING_SYSTEM_PROMPT = vertical_config.gathering_prompt
     # The answering prompt is the vertical's full answering_prompt with
     # placeholders for {application_profile} and {rag_context}
     ANSWERING_SYSTEM_PROMPT_TEMPLATE = vertical_config.answering_prompt
+
+
+def _enrich_profile_with_precompute(application_profile: str, params: dict | None) -> str:
+    """Append pre-computed engineering values to an application profile."""
+    if params:
+        precomputed = build_precomputed_context(
+            vertical_id=_current_vertical_id or "",
+            gathered_parameters=params,
+        )
+        if precomputed:
+            return application_profile + "\n\n" + precomputed
+    return application_profile
 
 
 def _get_answering_prompt(application_profile: str, rag_context: str) -> str:
@@ -595,6 +610,8 @@ def _handle_gathering_phase(
         else:
             application_profile = "(No structured parameters extracted)"
 
+        application_profile = _enrich_profile_with_precompute(application_profile, params)
+
         # Build the answering system prompt with context filled in
         answering_prompt = _get_answering_prompt(
             application_profile=application_profile,
@@ -671,6 +688,7 @@ def _handle_answering_phase(
         application_profile = "\n".join(profile_lines)
     else:
         application_profile = "(See conversation history for application details)"
+    application_profile = _enrich_profile_with_precompute(application_profile, gathered_parameters)
 
     answering_prompt = _get_answering_prompt(
         application_profile=application_profile,
@@ -820,6 +838,7 @@ def _handle_gathering_phase_stream(
         application_profile = "\n".join(profile_lines)
     else:
         application_profile = "(No structured parameters extracted)"
+    application_profile = _enrich_profile_with_precompute(application_profile, params)
 
     answering_prompt = _get_answering_prompt(
         application_profile=application_profile,
@@ -960,6 +979,7 @@ def _handle_answering_phase_stream(
         application_profile = "\n".join(profile_lines)
     else:
         application_profile = "(See conversation history for application details)"
+    application_profile = _enrich_profile_with_precompute(application_profile, gathered_parameters)
 
     answering_prompt = _get_answering_prompt(
         application_profile=application_profile,
