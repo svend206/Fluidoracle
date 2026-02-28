@@ -116,7 +116,7 @@ export default function AskPage() {
       {/* Question input */}
       <div className="bg-white border border-gray-200 rounded-lg p-5 mb-6">
         <h1 className="text-xl font-semibold text-gray-900 mb-1">
-          Ask a Hydraulic Filter Question
+          Ask a Question
         </h1>
         <p className="text-sm text-gray-500 mb-4">
           Get an AI-powered expert answer backed by a curated engineering knowledge base.
@@ -126,7 +126,7 @@ export default function AskPage() {
           <textarea
             value={question}
             onChange={e => setQuestion(e.target.value)}
-            placeholder="Ask any hydraulic filter engineering question..."
+            placeholder="Ask any engineering question..."
             rows={4}
             maxLength={2000}
             className="w-full rounded-lg border border-gray-300 px-4 py-3 text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none placeholder:text-gray-400"

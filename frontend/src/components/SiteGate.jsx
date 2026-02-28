@@ -39,7 +39,7 @@ export default function SiteGate({ children }) {
                     stroke="#60a5fa" strokeWidth="1.5" fill="none" strokeLinecap="round" opacity="0.8"/>
               <circle cx="16" cy="6" r="2" fill="#93c5fd"/>
             </svg>
-            <span className="text-gray-900 font-semibold text-xl tracking-tight">FilterOracle</span>
+            <span className="text-gray-900 font-semibold text-xl tracking-tight">Fluidoracle</span>
           </div>
           <p className="text-sm text-gray-500">This site is currently in private beta.</p>
         </div>

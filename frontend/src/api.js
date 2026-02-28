@@ -1,5 +1,5 @@
 /**
- * Hydraulic Filter Platform — API Client
+ * Fluidoracle — API Client
  *
  * All backend calls go through here. In dev, Vite proxies /api to localhost:8000.
  * In production, the backend serves the frontend so no proxy is needed.
@@ -8,23 +8,39 @@
 const BASE = '/api'
 
 // ---------------------------------------------------------------------------
+// Platform configuration
+// ---------------------------------------------------------------------------
+
+let _platformConfig = null
+
+export async function getPlatformConfig() {
+  if (_platformConfig) return _platformConfig
+  _platformConfig = await request('/config')
+  return _platformConfig
+}
+
+export function getCachedPlatformConfig() {
+  return _platformConfig
+}
+
+// ---------------------------------------------------------------------------
 // Auth token management (localStorage)
 // ---------------------------------------------------------------------------
 
 export function getAuthToken() {
-  return localStorage.getItem('spray_auth_token') || ''
+  return localStorage.getItem('fluidoracle_auth_token') || ''
 }
 
 export function setAuthToken(token) {
-  localStorage.setItem('spray_auth_token', token)
+  localStorage.setItem('fluidoracle_auth_token', token)
 }
 
 export function clearAuthToken() {
-  localStorage.removeItem('spray_auth_token')
+  localStorage.removeItem('fluidoracle_auth_token')
 }
 
 export function isAuthenticated() {
-  return !!localStorage.getItem('spray_auth_token')
+  return !!localStorage.getItem('fluidoracle_auth_token')
 }
 
 // ---------------------------------------------------------------------------
@@ -223,10 +239,10 @@ export async function getConsultSessions() {
   return request('/consult/sessions')
 }
 
-export async function createConsultSession(title = 'New Consultation') {
+export async function createConsultSession(title = 'New Consultation', verticalId = null) {
   return request('/consult/sessions', {
     method: 'POST',
-    body: JSON.stringify({ title }),
+    body: JSON.stringify({ title, vertical_id: verticalId }),
   })
 }
 

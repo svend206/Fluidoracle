@@ -21,6 +21,7 @@ class CommentRequest(BaseModel):
 
 class ConsultSessionRequest(BaseModel):
     title: str = Field(default="New Consultation", max_length=100)
+    vertical_id: str | None = Field(default=None, max_length=50)
 
 
 class ConsultMessageRequest(BaseModel):
