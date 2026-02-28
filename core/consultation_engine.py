@@ -35,6 +35,7 @@ FALLBACK_MODEL = os.getenv("FALLBACK_MODEL", "claude-sonnet-4-20250514")
 print(f"[consultation_engine] Primary model: {CONSULT_MODEL}")
 print(f"[consultation_engine] Fallback model: {FALLBACK_MODEL}")
 
+from core.database import log_llm_usage_sync
 from core.retrieval.verified_query import verified_query
 
 # ---------------------------------------------------------------------------
@@ -316,6 +317,7 @@ def _call_claude(system: str, messages: list[dict], max_tokens: int = 4000) -> t
                 f"input_tokens={response.usage.input_tokens} "
                 f"output_tokens={response.usage.output_tokens}"
             )
+            log_llm_usage_sync(response.usage, response.model, "gathering")
 
             if response.stop_reason == "refusal" or not response.content:
                 if model == FALLBACK_MODEL:
@@ -369,6 +371,7 @@ def _call_claude_stream(system: str, messages: list[dict], max_tokens: int = 400
                     f"input_tokens={response.usage.input_tokens} "
                     f"output_tokens={response.usage.output_tokens}"
                 )
+                log_llm_usage_sync(response.usage, response.model, "gathering")
 
                 if response.stop_reason == "refusal":
                     if model == FALLBACK_MODEL:
@@ -1002,34 +1005,39 @@ def _handle_answering_phase_stream(
 
 
 # ===========================================================================
-# Session Title Generation
+# Session Title Generation (deterministic — no LLM call)
 # ===========================================================================
 
 def generate_session_title(first_message: str, vertical_display_name: str = "consultation") -> str:
-    """Generate a short title for a consultation based on the first message."""
-    client = _get_client()
+    """Generate a short title from the first user message. No LLM call.
 
-    response = client.messages.create(
-        model=CONSULT_MODEL,
-        max_tokens=30,
-        messages=[
-            {
-                "role": "user",
-                "content": (
-                    f"Summarize this {vertical_display_name} consultation topic in 5 words or fewer. "
-                    "Return ONLY the title, nothing else.\n\n"
-                    f"{first_message}"
-                ),
-            },
-        ],
-    )
+    Strategy: extract the first meaningful noun phrase (up to ~8 words) from
+    the message. This captures the engineer's stated concern without burning
+    an API call on what is essentially a text-truncation task.
+    """
+    # Strip markdown, URLs, excessive whitespace
+    text = re.sub(r"https?://\S+", "", first_message)
+    text = re.sub(r"[#*_`>]", "", text)
+    text = re.sub(r"\s+", " ", text).strip()
 
-    if response.content and len(response.content) > 0:
-        for block in response.content:
-            if hasattr(block, "text"):
-                title = block.text.strip().strip('"').strip("'")
-                if len(title) > 60:
-                    title = title[:57] + "..."
-                return title
+    if not text:
+        return f"New {vertical_display_name.title()}"
 
-    return "New Consultation"
+    # Take the first sentence (or first 80 chars, whichever is shorter)
+    first_sentence = re.split(r"[.!?\n]", text)[0].strip()
+    if not first_sentence:
+        first_sentence = text[:80]
+
+    # Trim to ~8 words max
+    words = first_sentence.split()
+    if len(words) > 8:
+        title = " ".join(words[:8]) + "…"
+    else:
+        title = " ".join(words)
+
+    # Capitalize first letter, truncate to 60 chars
+    title = title[0].upper() + title[1:] if title else f"New {vertical_display_name.title()}"
+    if len(title) > 60:
+        title = title[:57] + "..."
+
+    return title

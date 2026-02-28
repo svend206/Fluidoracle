@@ -17,6 +17,8 @@ from pathlib import Path
 import anthropic
 from dotenv import load_dotenv
 
+from core.database import log_llm_usage_sync
+
 # Load env from project root
 _PROJECT_ROOT = Path(__file__).parent.parent
 load_dotenv(_PROJECT_ROOT / ".env")
@@ -180,6 +182,7 @@ def _call_claude(system: str, messages: list[dict], max_tokens: int = 4000) -> t
 
         print(f"[invention_engine] model={response.model} stop_reason={response.stop_reason} "
               f"input_tokens={response.usage.input_tokens} output_tokens={response.usage.output_tokens}")
+        log_llm_usage_sync(response.usage, response.model, "invention")
 
         # Check for refusal
         if response.stop_reason == "refusal" or not response.content:
@@ -309,27 +312,28 @@ USER MESSAGE:
 
 
 def generate_session_title(first_message: str) -> str:
-    """Generate a short title for a session based on the first message."""
-    client = _get_client()
+    """Generate a short title from the first user message. No LLM call."""
+    import re
 
-    response = client.messages.create(
-        model=INVENT_MODEL,
-        max_tokens=30,
-        messages=[
-            {
-                "role": "user",
-                "content": f"Summarize this engineering brainstorm topic in 3-6 words. Return ONLY the title, nothing else.\n\n{first_message}",
-            },
-        ],
-    )
+    text = re.sub(r"https?://\S+", "", first_message)
+    text = re.sub(r"[#*_`>]", "", text)
+    text = re.sub(r"\s+", " ", text).strip()
 
-    if response.content and len(response.content) > 0:
-        for block in response.content:
-            if hasattr(block, "text"):
-                title = block.text.strip().strip('"').strip("'")
-                # Truncate if too long
-                if len(title) > 60:
-                    title = title[:57] + "..."
-                return title
+    if not text:
+        return "New Invention Session"
 
-    return "New Invention Session"
+    first_sentence = re.split(r"[.!?\n]", text)[0].strip()
+    if not first_sentence:
+        first_sentence = text[:80]
+
+    words = first_sentence.split()
+    if len(words) > 8:
+        title = " ".join(words[:8]) + "…"
+    else:
+        title = " ".join(words)
+
+    title = title[0].upper() + title[1:] if title else "New Invention Session"
+    if len(title) > 60:
+        title = title[:57] + "..."
+
+    return title

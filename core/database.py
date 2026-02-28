@@ -274,7 +274,103 @@ async def init_db():
             )
         """)
 
+        await db.execute("""
+            CREATE TABLE IF NOT EXISTS llm_usage (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                session_id TEXT,
+                vertical_id TEXT,
+                platform_id TEXT,
+                phase TEXT,
+                model TEXT,
+                input_tokens INTEGER,
+                output_tokens INTEGER,
+                estimated_cost_usd REAL,
+                timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+
         await db.commit()
+
+
+# ===========================================================================
+# LLM Usage Tracking
+# ===========================================================================
+
+# Approximate costs per 1M tokens (USD) — update when pricing changes
+_MODEL_COSTS = {
+    "claude-sonnet-4-20250514": {"input": 3.0, "output": 15.0},
+    "claude-sonnet-4-5-20250929": {"input": 3.0, "output": 15.0},
+    "claude-haiku-3-5-20241022": {"input": 0.80, "output": 4.0},
+}
+
+
+async def log_llm_usage(
+    response_usage,
+    model: str,
+    phase: str,
+    session_id: str | None = None,
+    vertical_id: str | None = None,
+    platform_id: str | None = None,
+) -> None:
+    """Persist a single LLM call's token usage. Call after every Anthropic API response.
+
+    Args:
+        response_usage: The ``response.usage`` object from the Anthropic SDK.
+        model: Model identifier string.
+        phase: One of 'gathering', 'answering', 'followup', 'question', 'invention', 'other'.
+    """
+    input_tokens = getattr(response_usage, "input_tokens", 0)
+    output_tokens = getattr(response_usage, "output_tokens", 0)
+
+    costs = _MODEL_COSTS.get(model, {"input": 3.0, "output": 15.0})
+    estimated_cost = (input_tokens * costs["input"] + output_tokens * costs["output"]) / 1_000_000
+
+    try:
+        async with aiosqlite.connect(_get_db_path()) as db:
+            await db.execute(
+                """INSERT INTO llm_usage
+                   (session_id, vertical_id, platform_id, phase, model,
+                    input_tokens, output_tokens, estimated_cost_usd)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+                (session_id, vertical_id, platform_id, phase, model,
+                 input_tokens, output_tokens, estimated_cost),
+            )
+            await db.commit()
+    except Exception:
+        pass  # Non-critical — don't break the request over telemetry
+
+
+def log_llm_usage_sync(
+    response_usage,
+    model: str,
+    phase: str,
+    session_id: str | None = None,
+    vertical_id: str | None = None,
+    platform_id: str | None = None,
+) -> None:
+    """Synchronous version for use in sync engine code (consultation/answer/invention)."""
+    import sqlite3
+
+    input_tokens = getattr(response_usage, "input_tokens", 0)
+    output_tokens = getattr(response_usage, "output_tokens", 0)
+
+    costs = _MODEL_COSTS.get(model, {"input": 3.0, "output": 15.0})
+    estimated_cost = (input_tokens * costs["input"] + output_tokens * costs["output"]) / 1_000_000
+
+    try:
+        conn = sqlite3.connect(_get_db_path())
+        conn.execute(
+            """INSERT INTO llm_usage
+               (session_id, vertical_id, platform_id, phase, model,
+                input_tokens, output_tokens, estimated_cost_usd)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+            (session_id, vertical_id, platform_id, phase, model,
+             input_tokens, output_tokens, estimated_cost),
+        )
+        conn.commit()
+        conn.close()
+    except Exception:
+        pass
 
 
 # ===========================================================================

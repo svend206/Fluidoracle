@@ -35,6 +35,7 @@ STREAM_MODEL = os.getenv("STREAM_MODEL", "claude-sonnet-4-5-20250929")
 print(f"[answer_engine] Using model: {CLAUDE_MODEL}, fallback: {FALLBACK_MODEL}, stream: {STREAM_MODEL}")
 
 # Import retrieval from the core package (no more sys.path hacks)
+from core.database import log_llm_usage_sync
 from core.retrieval.verified_query import verified_query
 
 # ---------------------------------------------------------------------------
@@ -257,6 +258,7 @@ QUESTION:
             f"output_tokens={response.usage.output_tokens} "
             f"chunks={len(chunks_to_use)}"
         )
+        log_llm_usage_sync(response.usage, response.model, "answering")
 
         # Check if we got a valid response
         if response.content and len(response.content) > 0:
@@ -437,6 +439,8 @@ QUESTION:
             for text in stream.text_stream:
                 full_answer += text
                 yield _sse("chunk", {"text": text})
+            final_msg = stream.get_final_message()
+            log_llm_usage_sync(final_msg.usage, final_msg.model, "answering")
     except Exception as e:
         logger.error(f"[stream] Claude streaming error with {STREAM_MODEL}: {e}")
         # Fall back to non-streaming with fallback model
@@ -447,6 +451,7 @@ QUESTION:
                 system=system_prompt,
                 messages=[{"role": "user", "content": user_message}],
             )
+            log_llm_usage_sync(response.usage, response.model, "answering")
             if response.content:
                 for block in response.content:
                     if hasattr(block, "text") and block.text.strip():
