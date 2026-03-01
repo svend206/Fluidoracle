@@ -113,4 +113,98 @@ async def admin_create_knowledge_update(
     }
 
 
-# ===========================================================================
+@router.get("/api/admin/demand-signals")
+async def admin_demand_signals(
+    x_admin_key: str | None = Header(default=None),
+    limit: int = 50,
+):
+    """View off-vertical demand signals — what engineers are asking for
+    that the current vertical doesn't cover."""
+    _verify_admin_key(x_admin_key)
+
+    import aiosqlite
+    db_path = database._get_db_path()
+    async with aiosqlite.connect(db_path) as db:
+        db.row_factory = aiosqlite.Row
+        rows = await db.execute_fetchall(
+            """SELECT source_vertical, detected_target_vertical,
+                      query_text, timestamp, session_id
+               FROM off_vertical_demand
+               ORDER BY timestamp DESC
+               LIMIT ?""",
+            (limit,),
+        )
+
+    async with aiosqlite.connect(db_path) as db:
+        summary_rows = await db.execute_fetchall(
+            """SELECT source_vertical, detected_target_vertical, COUNT(*) as count
+               FROM off_vertical_demand
+               GROUP BY source_vertical, detected_target_vertical
+               ORDER BY count DESC""",
+        )
+
+    return {
+        "total": len(rows),
+        "summary": [{"from": r[0], "to": r[1], "count": r[2]} for r in summary_rows],
+        "signals": [
+            {
+                "source_vertical": r["source_vertical"],
+                "target_vertical": r["detected_target_vertical"],
+                "query": r["query_text"],
+                "timestamp": r["timestamp"],
+                "session_id": r["session_id"],
+            }
+            for r in rows
+        ],
+    }
+
+
+@router.get("/api/admin/llm-costs")
+async def admin_llm_costs(
+    x_admin_key: str | None = Header(default=None),
+    days: int = 30,
+):
+    """View LLM usage costs, grouped by vertical and phase."""
+    _verify_admin_key(x_admin_key)
+
+    import aiosqlite
+    db_path = database._get_db_path()
+    async with aiosqlite.connect(db_path) as db:
+        rows = await db.execute_fetchall(
+            """SELECT vertical_id, phase, model,
+                      COUNT(*) as calls,
+                      SUM(input_tokens) as total_input,
+                      SUM(output_tokens) as total_output,
+                      SUM(estimated_cost_usd) as total_cost
+               FROM llm_usage
+               WHERE timestamp > datetime('now', ?)
+               GROUP BY vertical_id, phase, model
+               ORDER BY total_cost DESC""",
+            (f"-{days} days",),
+        )
+        totals = await db.execute_fetchall(
+            """SELECT COUNT(*), SUM(input_tokens), SUM(output_tokens),
+                      SUM(estimated_cost_usd)
+               FROM llm_usage
+               WHERE timestamp > datetime('now', ?)""",
+            (f"-{days} days",),
+        )
+
+    total = totals[0] if totals else (0, 0, 0, 0)
+    return {
+        "period_days": days,
+        "totals": {
+            "calls": total[0],
+            "input_tokens": total[1],
+            "output_tokens": total[2],
+            "estimated_cost_usd": round(total[3] or 0, 4),
+        },
+        "breakdown": [
+            {
+                "vertical": r[0], "phase": r[1], "model": r[2],
+                "calls": r[3], "input_tokens": r[4], "output_tokens": r[5],
+                "estimated_cost_usd": round(r[6] or 0, 4),
+            }
+            for r in rows
+        ],
+    }

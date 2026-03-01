@@ -63,6 +63,14 @@ async def lifespan(app: FastAPI):
         ae.init_vertical(default_vc)
         print(f"[startup] Default vertical: {default_vc.display_name} ({default_vertical_id})")
 
+        # Initialize cross-vertical intelligence (embedding-based detection)
+        from core.cross_vertical import init_cross_vertical
+        init_cross_vertical(
+            platform_id=PLATFORM_ID,
+            verticals=platform.verticals,
+            db_path=DATABASE_PATH,
+        )
+
         # Pre-warm the RAG pipeline
         try:
             from core.retrieval.hybrid_search import search as _warmup_search

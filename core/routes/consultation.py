@@ -129,6 +129,17 @@ async def send_consult_message(session_id: str, req: ConsultMessageRequest):
         phase_at_time=session["phase"],
     )
 
+    # Check for off-vertical demand (embedding-based, non-blocking)
+    try:
+        from core.cross_vertical import check_off_vertical
+        check_off_vertical(
+            message_text=user_content,
+            current_vertical_id=session.get("vertical_id", ""),
+            session_id=session_id,
+        )
+    except Exception:
+        pass  # Never block consultation on demand detection
+
     # Build conversation history from existing messages
     conversation_history = [
         {"role": m["role"], "content": m["content"]}
@@ -280,6 +291,17 @@ async def send_consult_message_stream(session_id: str, req: ConsultMessageReques
         content=user_content,
         phase_at_time=session["phase"],
     )
+
+    # Check for off-vertical demand (embedding-based, non-blocking)
+    try:
+        from core.cross_vertical import check_off_vertical
+        check_off_vertical(
+            message_text=user_content,
+            current_vertical_id=session.get("vertical_id", ""),
+            session_id=session_id,
+        )
+    except Exception:
+        pass
 
     # Build conversation history
     conversation_history = [
