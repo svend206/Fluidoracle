@@ -1,0 +1,35 @@
+# =============================================================
+# Fluidoracle FDS — Caddy Reverse Proxy Configuration
+# =============================================================
+
+fds.fluidoracle.com {
+    tls /etc/caddy/certs/origin.pem /etc/caddy/certs/origin-key.pem
+
+    reverse_proxy app:8000 {
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-For {remote_host}
+        header_up X-Forwarded-Proto {scheme}
+        flush_interval -1
+    }
+
+    @static path /assets/*
+    header @static Cache-Control "public, max-age=31536000, immutable"
+
+    @notStreaming {
+        not path /api/ask/stream
+        not path /api/consult/sessions/*/messages/stream
+    }
+    encode @notStreaming gzip
+
+    header {
+        X-Content-Type-Options nosniff
+        X-Frame-Options DENY
+        Referrer-Policy strict-origin-when-cross-origin
+        -Server
+    }
+}
+
+www.fds.fluidoracle.com {
+    tls /etc/caddy/certs/origin.pem /etc/caddy/certs/origin-key.pem
+    redir https://fds.fluidoracle.com{uri} permanent
+}

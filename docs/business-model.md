@@ -125,7 +125,7 @@ Each vertical is its own consulting surface with its own manufacturer ecosystem:
 | 6 | Lubrication systems | Adjacent to filters; conditioning systems are complex |
 | 7+ | Actuators, hose & fittings, heat exchangers | Expand as audience grows |
 
-Each vertical adds to the platform's total addressable market without requiring a new go-to-market strategy. The same engineers who use FilterOracle also specify pumps, valves, and seals. Cross-vertical reach is a natural upgrade path.
+Each vertical adds to the platform's total addressable market without requiring a new go-to-market strategy. The same engineers who use Fluidoracle also specify pumps, valves, and seals. Cross-vertical reach is a natural upgrade path.
 
 ---
 

@@ -1,0 +1,98 @@
+{
+  "meta": {
+    "vertical": "spray_nozzles",
+    "platform": "fds",
+    "description": "Fluidoracle spray nozzle consultation test fixtures",
+    "version": "1.0"
+  },
+  "test_cases": [
+    {
+      "id": "sn-001",
+      "question": "What nozzle type should I use for an FGD limestone slurry absorber tower?",
+      "required_concepts": [
+        ["spiral", "MaxiPass", "tangential", "free passage"],
+        ["clog", "slurry", "abrasion", "solids"],
+        ["hollow cone", "full cone", "coverage"]
+      ],
+      "expected_answer_contains": ["free passage", "clog"],
+      "domain": "fgd_emissions_control"
+    },
+    {
+      "id": "sn-002",
+      "question": "What is Sauter Mean Diameter (SMD / D32) and why is it more useful than VMD for evaporation applications?",
+      "required_concepts": [
+        ["D32", "Sauter", "surface area", "volume"],
+        ["evaporation", "mass transfer", "heat transfer"],
+        ["VMD", "DV0.5", "median"]
+      ],
+      "expected_answer_contains": ["D32", "surface"],
+      "domain": "atomization_fundamentals"
+    },
+    {
+      "id": "sn-003",
+      "question": "How do I select nozzles for a spray dryer — what nozzle type and what parameters control the particle size?",
+      "required_concepts": [
+        ["pressure swirl", "Twist&Dry", "orifice", "swirl chamber"],
+        ["particle size", "droplet size", "SMD"],
+        ["pressure", "flow rate", "viscosity"]
+      ],
+      "expected_answer_contains": ["pressure", "orifice"],
+      "domain": "spray_drying"
+    },
+    {
+      "id": "sn-004",
+      "question": "What materials should I specify for nozzles handling acidic FGD slurry with high chloride content?",
+      "required_concepts": [
+        ["RBSC", "silicon carbide", "ceramic"],
+        ["chloride", "corrosion", "acid"],
+        ["C-22", "Hastelloy", "alloy"]
+      ],
+      "expected_answer_contains": ["ceramic", "chloride"],
+      "domain": "materials_selection"
+    },
+    {
+      "id": "sn-005",
+      "question": "How does air-to-liquid ratio affect droplet size in a two-fluid air atomizing nozzle?",
+      "required_concepts": [
+        ["ALR", "air-to-liquid", "air atomizing", "two-fluid"],
+        ["SMD", "droplet size", "fine"],
+        ["XA", "atomization"]
+      ],
+      "expected_answer_contains": ["ALR", "droplet"],
+      "domain": "air_atomizing"
+    },
+    {
+      "id": "sn-006",
+      "question": "What is the selection criteria for tank cleaning nozzles — when should I use a rotary jet vs a static spray ball?",
+      "required_concepts": [
+        ["rotary", "static", "spray ball"],
+        ["soil", "impact", "mechanical force"],
+        ["HydroWhirl", "Orbitor", "CIP"]
+      ],
+      "expected_answer_contains": ["impact", "soil"],
+      "domain": "tank_cleaning"
+    },
+    {
+      "id": "sn-007",
+      "question": "My spiral nozzle spray pattern has deteriorated and flow rate has increased. What's wrong and how do I fix it?",
+      "required_concepts": [
+        ["wear", "orifice", "erosion"],
+        ["flow rate", "increase", "diameter"],
+        ["replace", "inspect", "maintenance"]
+      ],
+      "expected_answer_contains": ["wear", "orifice"],
+      "domain": "troubleshooting"
+    },
+    {
+      "id": "sn-008",
+      "question": "What spray nozzle pattern and droplet size is appropriate for gas humidification where complete evaporation is required before the duct wall?",
+      "required_concepts": [
+        ["evaporation", "wall wetting", "complete"],
+        ["air atomizing", "hollow cone", "fine"],
+        ["SMD", "droplet size", "evaporation time"]
+      ],
+      "expected_answer_contains": ["evaporation"],
+      "domain": "gas_cooling_humidification"
+    }
+  ]
+}

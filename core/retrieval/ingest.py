@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 """
-Hydraulic Filter Expert — Document Ingestion Pipeline (v2: Parent-Child + BM25)
+Fluidoracle — Document Ingestion Pipeline (v2: Parent-Child + BM25)
 ===========================================================================
 Ingests documents into the knowledge base using a two-level chunking strategy:
 

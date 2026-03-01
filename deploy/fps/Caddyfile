@@ -1,5 +1,5 @@
 # =============================================================
-# Hydraulic Filter Expert — Caddy Reverse Proxy Configuration
+# Fluidoracle FPS — Caddy Reverse Proxy Configuration
 # =============================================================
 # Caddy sits in front of the FastAPI app, handling:
 #   - TLS termination (Cloudflare origin certificates)
@@ -12,7 +12,7 @@
 # Cloudflare "Full (Strict)" mode validates the origin cert is Cloudflare-signed.
 # =============================================================
 
-sprayoracle.com {
+fps.fluidoracle.com {
     # TLS with Cloudflare origin certificates
     tls /etc/caddy/certs/origin.pem /etc/caddy/certs/origin-key.pem
 
@@ -37,8 +37,6 @@ sprayoracle.com {
     header @favicon Cache-Control "public, max-age=86400"
 
     # Gzip compression for text responses — but NOT for SSE streams.
-    # Gzip buffers the entire response before compressing, which defeats
-    # token-by-token streaming.
     @notStreaming {
         not path /api/ask/stream
         not path /api/consult/sessions/*/messages/stream
@@ -50,13 +48,12 @@ sprayoracle.com {
         X-Content-Type-Options nosniff
         X-Frame-Options DENY
         Referrer-Policy strict-origin-when-cross-origin
-        # Remove the Server header (don't leak Caddy version)
         -Server
     }
 }
 
-# Redirect www to apex domain
-www.sprayoracle.com {
+# Redirect www to subdomain
+www.fps.fluidoracle.com {
     tls /etc/caddy/certs/origin.pem /etc/caddy/certs/origin-key.pem
-    redir https://sprayoracle.com{uri} permanent
+    redir https://fps.fluidoracle.com{uri} permanent
 }

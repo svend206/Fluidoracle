@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 """
-Hydraulic Filter Expert — Hybrid Retrieval Engine
+Fluidoracle — Hybrid Retrieval Engine
 ==============================================
 Three-stage retrieval pipeline optimized for engineering content:
 

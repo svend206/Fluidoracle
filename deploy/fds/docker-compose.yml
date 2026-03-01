@@ -1,0 +1,58 @@
+# =============================================================
+# Fluidoracle FDS (Fluid Delivery Systems) — Docker Compose
+# =============================================================
+
+services:
+
+  app:
+    build: .
+    container_name: fluidoracle-fds-app
+    restart: unless-stopped
+
+    ports:
+      - "127.0.0.1:8000:8000"
+
+    env_file:
+      - .env.production
+
+    environment:
+      - PLATFORM_ID=fds
+      - CHROMA_PATH=/app/vector-store
+      - DATABASE_PATH=/app/data/community.db
+      - CORS_ORIGINS=https://fds.fluidoracle.com
+
+    volumes:
+      - ./vector-store:/app/vector-store
+      - ./data:/app/data
+      - ./ai/08-training-data:/app/ai/08-training-data
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
+
+
+  caddy:
+    image: caddy:2-alpine
+    container_name: fluidoracle-fds-caddy
+    restart: unless-stopped
+
+    ports:
+      - "80:80"
+      - "443:443"
+
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
+    depends_on:
+      app:
+        condition: service_healthy
+
+
+volumes:
+  caddy_data:
+  caddy_config:

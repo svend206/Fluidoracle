@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-FilterOracle Test Harness
+Fluidoracle Test Harness
 =========================
-Runs structured test cases against the FilterOracle /api/ask endpoint.
+Runs structured test cases against the Fluidoracle /api/ask endpoint.
 Scoring is pure keyword/concept matching — zero LLM API tokens.
 
 Usage:
@@ -29,7 +29,7 @@ import requests
 # ---------------------------------------------------------------------------
 # Config
 # ---------------------------------------------------------------------------
-DEFAULT_URL = "https://filteroracle.com"
+DEFAULT_URL = "https://fluidoracle.com"
 FIXTURES_PATH = Path(__file__).parent / "fixtures.json"
 REQUEST_TIMEOUT = 120  # seconds — RAG pipeline can be slow on complex queries
 DELAY_BETWEEN_REQUESTS = 1.0  # seconds — be polite to the API
@@ -249,8 +249,8 @@ def print_summary(results: list[dict]):
 # ---------------------------------------------------------------------------
 
 def main():
-    parser = argparse.ArgumentParser(description="FilterOracle test harness")
-    parser.add_argument("--url", default=DEFAULT_URL, help="Base URL of FilterOracle API")
+    parser = argparse.ArgumentParser(description="Fluidoracle test harness")
+    parser.add_argument("--url", default=DEFAULT_URL, help="Base URL of Fluidoracle API")
     parser.add_argument("--case", help="Run a single test case by ID")
     parser.add_argument("--case-study", help="Run all tests for a case study (e.g. mining)")
     parser.add_argument("--verbose", "-v", action="store_true", help="Show answer previews")
@@ -281,7 +281,7 @@ def main():
             print(f"ERROR: No test cases for case_study '{args.case_study}'", file=sys.stderr)
             sys.exit(1)
 
-    print(f"FilterOracle Test Harness")
+    print(f"Fluidoracle Test Harness")
     print(f"Target: {args.url}")
     print(f"Tests:  {len(test_cases)}")
     print(f"Time:   {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")

@@ -1,5 +1,5 @@
 """
-Hydraulic Filter Expert — Training Data Logger
+Fluidoracle — Training Data Logger
 ==========================================
 Captures training data from interactions for future model fine-tuning.
 
@@ -293,7 +293,7 @@ def _count_lines(path: Path) -> int:
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Hydraulic Filter Expert — Training Data Logger",
+        description="Fluidoracle — Training Data Logger",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:

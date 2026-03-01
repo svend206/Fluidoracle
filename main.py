@@ -71,15 +71,24 @@ async def lifespan(app: FastAPI):
             db_path=DATABASE_PATH,
         )
 
-        # Pre-warm the RAG pipeline
-        try:
-            from core.retrieval.hybrid_search import search as _warmup_search
-            warmup_query = default_vc.warmup_query or "test query"
-            print("[startup] Pre-warming RAG pipeline (BM25 + cross-encoder + ChromaDB)...")
-            _warmup_search(warmup_query, top_k=1, use_reranker=True)
-            print("[startup] RAG pipeline warm.")
-        except Exception as e:
-            print(f"[startup] WARNING: RAG warmup failed: {e} — first request will be slow.")
+        # Pre-warm the RAG pipeline — retrieval only, no LLM calls
+        # Warms: embedding model, BM25 index, ChromaDB collections, cross-encoder
+        print("[startup] Pre-warming retrieval pipeline (embeddings + BM25 + ChromaDB + reranker)...")
+        from core.retrieval.hybrid_search import search as _warmup_search
+        from core.retrieval.config import EMBEDDING_MODEL
+        for vid, vc in platform.verticals.items():
+            try:
+                _warmup_search(
+                    "warmup",
+                    top_k=1,
+                    use_reranker=True,
+                    child_collection=vc.child_collection,
+                    parent_collection=vc.parent_collection,
+                    bm25_index_path=vc.bm25_index_path,
+                )
+                print(f"[startup] Warmed: {vid}")
+            except Exception as e:
+                print(f"[startup] WARNING: warmup failed for {vid}: {e}")
 
     yield
     # Shutdown (nothing to clean up)

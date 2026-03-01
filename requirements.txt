@@ -1,4 +1,4 @@
-# Hydraulic Filter Expert — Python Dependencies
+# Fluidoracle — Python Dependencies
 # Install with: py -3.12 -m pip install -r requirements.txt
 
 # --- Vector Database ---

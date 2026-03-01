@@ -1,5 +1,5 @@
 """
-Hydraulic Filter Expert — Query Tool (v2: Hybrid Retrieval)
+Fluidoracle — Query Tool (v2: Hybrid Retrieval)
 =======================================================
 Simple interface for querying the knowledge base using the hybrid
 retrieval pipeline (semantic + BM25 + parent-child + cross-encoder).

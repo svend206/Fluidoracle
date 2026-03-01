@@ -1,6 +1,6 @@
 from __future__ import annotations
 """
-Hydraulic Filter Expert — Verified Query System (v2: Hybrid Retrieval)
+Fluidoracle — Verified Query System (v2: Hybrid Retrieval)
 =================================================================
 Wraps the hybrid retrieval engine with the 5-step verification protocol:
 
@@ -543,7 +543,7 @@ def display_verified_result(result: dict):
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Hydraulic Filter Expert — Verified Query System v2",
+        description="Fluidoracle — Verified Query System v2",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:

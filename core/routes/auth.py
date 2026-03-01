@@ -138,7 +138,7 @@ async def auth_claim_sessions(
 
 @router.get("/api/consult/unsubscribe/{unsubscribe_token}")
 async def unsubscribe_user(unsubscribe_token: str):
-    """One-click unsubscribe from all FilterOracle emails."""
+    """One-click unsubscribe from all Fluidoracle emails."""
     result = await database.unsubscribe_user(unsubscribe_token)
 
     if result is None:
@@ -157,7 +157,7 @@ async def unsubscribe_user(unsubscribe_token: str):
         <html><body style="font-family: sans-serif; max-width: 500px; margin: 60px auto; text-align: center;">
             <h2 style="color: #1e3a5f;">Unsubscribed</h2>
             <p style="color: #555;">
-                <strong>{result['email']}</strong> has been unsubscribed from FilterOracle emails.
+                <strong>{result['email']}</strong> has been unsubscribed from Fluidoracle emails.
                 You can re-enable notifications in your account settings anytime.
             </p>
         </body></html>

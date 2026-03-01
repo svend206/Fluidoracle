@@ -1,5 +1,5 @@
 # =============================================================
-# Hydraulic Filter Expert Platform — Docker Compose
+# Fluidoracle FPS (Fluid Power Systems) — Docker Compose
 # =============================================================
 # Two services:
 #   app   — FastAPI backend (serves frontend + API)
@@ -17,7 +17,7 @@ services:
   # --- FastAPI Application ---
   app:
     build: .
-    container_name: filteroracle-app
+    container_name: fluidoracle-fps-app
     restart: unless-stopped
 
     # Only bind to localhost — Caddy handles external traffic
@@ -30,9 +30,10 @@ services:
 
     # Override paths for Docker volume mounts
     environment:
+      - PLATFORM_ID=fps
       - CHROMA_PATH=/app/vector-store
       - DATABASE_PATH=/app/data/community.db
-      - CORS_ORIGINS=https://filteroracle.com,https://www.filteroracle.com
+      - CORS_ORIGINS=https://fps.fluidoracle.com,https://fluidoracle.com
 
     volumes:
       # Vector store: ChromaDB needs write access for SQLite WAL/journal files
@@ -44,25 +45,19 @@ services:
       # Training exhaust: read-write (JSONL logs for fine-tuning)
       - ./ai/08-training-data:/app/ai/08-training-data
 
-      # Gap tracker: read-write (logs low-confidence queries for knowledge gaps)
-      - ./ai/02-knowledge-base/gap-tracker.jsonl:/app/ai/02-knowledge-base/gap-tracker.jsonl
-
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
       interval: 30s
       timeout: 10s
       retries: 3
-      # RAG warmup loads BM25 (~263MB) + cross-encoder (~80MB) + ChromaDB on
-      # startup. This takes 30-60s on a cold start. Match the Dockerfile's
-      # 120s start-period so Docker doesn't mark the container unhealthy
-      # while the warmup is still running.
+      # RAG warmup loads BM25 + cross-encoder + ChromaDB on startup (~60-120s cold start)
       start_period: 120s
 
 
   # --- Caddy Reverse Proxy ---
   caddy:
     image: caddy:2-alpine
-    container_name: filteroracle-caddy
+    container_name: fluidoracle-fps-caddy
     restart: unless-stopped
 
     ports:
@@ -71,7 +66,6 @@ services:
 
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
-      - ./certs:/etc/caddy/certs:ro
       - caddy_data:/data
       - caddy_config:/config
 

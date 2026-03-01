@@ -1,5 +1,5 @@
 """
-Hydraulic Filter Expert — Setup Verification (v2: Hybrid Pipeline)
+Fluidoracle — Setup Verification (v2: Hybrid Pipeline)
 ==============================================================
 Tests all components of the hybrid retrieval pipeline:
   1. Python packages

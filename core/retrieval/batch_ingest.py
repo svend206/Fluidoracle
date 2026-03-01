@@ -1,6 +1,6 @@
 from __future__ import annotations
 """
-Hydraulic Filter Expert — Batch Document Ingestion
+Fluidoracle — Batch Document Ingestion
 ================================================
 Ingests all documents from a directory (and subdirectories) into the
 knowledge base in one shot. Designed for bulk loading hundreds of files.

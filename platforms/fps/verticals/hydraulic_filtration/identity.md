@@ -13,7 +13,7 @@ conflicts_with: []
 tags: [identity, system-prompt, agent]
 ---
 
-# SYSTEM PROMPT — Hydraulic Filter Expert Agent
+# SYSTEM PROMPT — Fluidoracle FPS: Hydraulic Filtration Expert
 
 ## Identity
 

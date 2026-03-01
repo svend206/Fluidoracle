@@ -1,17 +1,20 @@
 from __future__ import annotations
 """
-Hydraulic Filter Platform — Email Utilities
-========================================
+Fluidoracle — Email Utilities
+==============================
 SMTP email sending for verification, follow-up notifications,
 and knowledge base update alerts.
 
+Sender identity is always Fluidoracle (platform-level).
+Email body references the specific vertical consultation context.
+
 Configuration via environment variables:
-    SMTP_HOST       — SMTP server hostname (default: smtp.gmail.com)
-    SMTP_PORT       — SMTP server port (default: 587)
-    SMTP_USER       — SMTP username / email
-    SMTP_PASSWORD   — SMTP password or app password
+    SMTP_HOST         — SMTP server hostname (default: smtp.gmail.com)
+    SMTP_PORT         — SMTP server port (default: 587)
+    SMTP_USER         — SMTP username / email
+    SMTP_PASSWORD     — SMTP password or app password
     SMTP_FROM_ADDRESS — "From" address (defaults to SMTP_USER)
-    BASE_URL        — Public base URL for verification links
+    BASE_URL          — Public base URL for verification links
 """
 
 import logging
@@ -32,6 +35,11 @@ SMTP_USER = os.getenv("SMTP_USER", "")
 SMTP_PASSWORD = os.getenv("SMTP_PASSWORD", "")
 SMTP_FROM_ADDRESS = os.getenv("SMTP_FROM_ADDRESS", "") or SMTP_USER
 BASE_URL = os.getenv("BASE_URL", "http://localhost:8000")
+
+# Brand constants
+BRAND = "Fluidoracle"
+BRAND_COLOR = "#1e3a5f"
+BRAND_ACCENT = "#2563eb"
 
 
 def is_email_configured() -> bool:
@@ -70,20 +78,51 @@ def _send_email(to: str, subject: str, html_body: str, text_body: str = "") -> b
         return False
 
 
+def _email_header() -> str:
+    """Standard Fluidoracle email header HTML."""
+    return f"""
+    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="margin-bottom: 20px; padding-bottom: 16px; border-bottom: 2px solid {BRAND_COLOR};">
+            <span style="font-size: 20px; font-weight: 700; color: {BRAND_COLOR};">{BRAND}</span>
+            <span style="font-size: 12px; color: #888; margin-left: 8px;">
+                Vendor-neutral AI consulting for fluid systems
+            </span>
+        </div>
+    """
+
+
+def _email_footer(unsubscribe_url: str | None = None) -> str:
+    """Standard Fluidoracle email footer HTML."""
+    unsub = (
+        f'<a href="{unsubscribe_url}" style="color: #aaa;">Unsubscribe</a>'
+        if unsubscribe_url else ""
+    )
+    return f"""
+        <hr style="border: none; border-top: 1px solid #eee; margin: 24px 0;" />
+        <p style="color: #aaa; font-size: 11px;">
+            &mdash; {BRAND} &nbsp;|&nbsp; {BASE_URL}
+            {"&nbsp;&nbsp;·&nbsp;&nbsp;" + unsub if unsub else ""}
+        </p>
+    </div>
+    """
+
+
 # ---------------------------------------------------------------------------
 # Email templates
 # ---------------------------------------------------------------------------
 
 def send_auth_code(email: str, code: str) -> bool:
     """Send a 6-digit verification code for passwordless login."""
-    subject = "Your FilterOracle verification code"
+    subject = f"Your {BRAND} sign-in code"
 
     html_body = f"""
-    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 500px; margin: 0 auto; padding: 20px;">
-        <p style="color: #555; font-size: 14px;">Your FilterOracle verification code is:</p>
+    {_email_header()}
+        <p style="color: #555; font-size: 14px;">Your sign-in code is:</p>
         <div style="text-align: center; margin: 24px 0;">
-            <span style="font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #1e3a5f;
-                         background: #f1f5f9; padding: 16px 32px; border-radius: 8px; display: inline-block;">
+            <span style="font-size: 32px; font-weight: bold; letter-spacing: 8px;
+                         color: {BRAND_COLOR}; background: #f1f5f9; padding: 16px 32px;
+                         border-radius: 8px; display: inline-block;">
                 {code}
             </span>
         </div>
@@ -91,17 +130,16 @@ def send_auth_code(email: str, code: str) -> bool:
         <p style="color: #888; font-size: 12px; margin-top: 24px;">
             If you didn't request this code, you can safely ignore this email.
         </p>
-        <p style="color: #aaa; font-size: 11px;">&mdash; FilterOracle</p>
-    </div>
+    {_email_footer()}
     """
 
-    text_body = f"""Your FilterOracle verification code is: {code}
+    text_body = f"""Your {BRAND} sign-in code: {code}
 
 This code expires in 10 minutes.
 
 If you didn't request this code, you can safely ignore this email.
 
--- FilterOracle
+-- {BRAND}
 """
 
     return _send_email(email, subject, html_body, text_body)
@@ -112,6 +150,7 @@ def send_verification_email(
     verification_token: str,
     session_title: str,
     unsubscribe_token: str,
+    vertical_display_name: str = "Engineering",
 ) -> bool:
     """Send a verification email to a new subscriber."""
     verify_url = f"{BASE_URL}/api/consult/subscribe/verify?token={verification_token}"
@@ -120,39 +159,34 @@ def send_verification_email(
     subject = f"Verify your subscription — {session_title}"
 
     html_body = f"""
-    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-        <h2 style="color: #1e3a5f; margin-bottom: 8px;">Hydraulic Filter Expert Platform</h2>
+    {_email_header()}
         <p style="color: #555; font-size: 14px;">
-            Thanks for subscribing to updates for your consultation: <strong>{session_title}</strong>
+            Thanks for subscribing to updates for your {vertical_display_name} consultation:
+            <strong>{session_title}</strong>
         </p>
         <p style="color: #555; font-size: 14px;">
-            Please verify your email address by clicking the button below:
+            Please verify your email address:
         </p>
         <div style="text-align: center; margin: 30px 0;">
             <a href="{verify_url}"
-               style="background-color: #2563eb; color: white; padding: 12px 32px;
+               style="background-color: {BRAND_ACCENT}; color: white; padding: 12px 32px;
                       text-decoration: none; border-radius: 6px; font-weight: 600;
                       font-size: 14px; display: inline-block;">
                 Verify Email Address
             </a>
         </div>
-        <p style="color: #888; font-size: 12px;">
-            Once verified, we'll notify you when:
-        </p>
+        <p style="color: #888; font-size: 12px;">Once verified, we'll notify you when:</p>
         <ul style="color: #888; font-size: 12px; padding-left: 20px;">
-            <li>New technical data is added to the knowledge base that's relevant to your consultation</li>
+            <li>New technical data relevant to your consultation is added to the knowledge base</li>
             <li>It's time for a follow-up on your implementation results</li>
         </ul>
-        <hr style="border: none; border-top: 1px solid #eee; margin: 24px 0;" />
-        <p style="color: #aaa; font-size: 11px;">
+        <p style="color: #888; font-size: 12px;">
             If you didn't request this, you can safely ignore this email.
-            <br/>
-            <a href="{unsubscribe_url}" style="color: #aaa;">Unsubscribe</a>
         </p>
-    </div>
+    {_email_footer(unsubscribe_url)}
     """
 
-    text_body = f"""Hydraulic Filter Expert Platform
+    text_body = f"""{BRAND} — {vertical_display_name} Consultation
 
 Thanks for subscribing to updates for: {session_title}
 
@@ -162,6 +196,7 @@ Once verified, we'll notify you when relevant technical data is added
 or when it's time for a follow-up on your implementation.
 
 Unsubscribe: {unsubscribe_url}
+-- {BRAND}
 """
 
     return _send_email(email, subject, html_body, text_body)
@@ -173,6 +208,7 @@ def send_followup_reminder(
     followup_stage: str,
     session_id: str,
     unsubscribe_token: str,
+    vertical_display_name: str = "Engineering",
 ) -> bool:
     """Send a follow-up outcome reminder to a subscriber."""
     outcome_url = f"{BASE_URL}/consult?session={session_id}"
@@ -182,10 +218,10 @@ def send_followup_reminder(
     subject = f"{stage_label} Follow-up — {session_title}"
 
     html_body = f"""
-    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-        <h2 style="color: #1e3a5f; margin-bottom: 8px;">Hydraulic Filter Expert Platform</h2>
+    {_email_header()}
         <p style="color: #555; font-size: 14px;">
-            It's time for your <strong>{stage_label.lower()}</strong> follow-up on: <strong>{session_title}</strong>
+            It's time for your <strong>{stage_label.lower()}</strong> follow-up on your
+            {vertical_display_name} consultation: <strong>{session_title}</strong>
         </p>
         <p style="color: #555; font-size: 14px;">
             How did the recommendation work out? Your feedback helps us improve
@@ -193,20 +229,16 @@ def send_followup_reminder(
         </p>
         <div style="text-align: center; margin: 30px 0;">
             <a href="{outcome_url}"
-               style="background-color: #2563eb; color: white; padding: 12px 32px;
+               style="background-color: {BRAND_ACCENT}; color: white; padding: 12px 32px;
                       text-decoration: none; border-radius: 6px; font-weight: 600;
                       font-size: 14px; display: inline-block;">
                 Report Your Results
             </a>
         </div>
-        <hr style="border: none; border-top: 1px solid #eee; margin: 24px 0;" />
-        <p style="color: #aaa; font-size: 11px;">
-            <a href="{unsubscribe_url}" style="color: #aaa;">Unsubscribe from future emails</a>
-        </p>
-    </div>
+    {_email_footer(unsubscribe_url)}
     """
 
-    text_body = f"""Hydraulic Filter Expert Platform
+    text_body = f"""{BRAND} — {vertical_display_name} Consultation
 
 {stage_label} Follow-up: {session_title}
 
@@ -214,6 +246,7 @@ How did the recommendation work out? Report your results:
 {outcome_url}
 
 Unsubscribe: {unsubscribe_url}
+-- {BRAND}
 """
 
     return _send_email(email, subject, html_body, text_body)
@@ -225,6 +258,7 @@ def send_knowledge_update_notification(
     update_description: str,
     session_title: str,
     unsubscribe_token: str,
+    vertical_display_name: str = "Engineering",
 ) -> bool:
     """Notify a subscriber about a relevant knowledge base update."""
     unsubscribe_url = f"{BASE_URL}/api/consult/subscribe/unsubscribe?token={unsubscribe_token}"
@@ -232,38 +266,33 @@ def send_knowledge_update_notification(
     subject = f"New data available — {update_title}"
 
     html_body = f"""
-    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-        <h2 style="color: #1e3a5f; margin-bottom: 8px;">Hydraulic Filter Expert Platform</h2>
+    {_email_header()}
         <p style="color: #555; font-size: 14px;">
-            New technical data has been added to the knowledge base that may be relevant
-            to your consultation: <strong>{session_title}</strong>
+            New technical data has been added to the {vertical_display_name} knowledge base
+            that may be relevant to your consultation: <strong>{session_title}</strong>
         </p>
-        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin: 16px 0;">
-            <h3 style="color: #1e3a5f; margin: 0 0 8px 0; font-size: 15px;">{update_title}</h3>
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;
+                    padding: 16px; margin: 16px 0;">
+            <h3 style="color: {BRAND_COLOR}; margin: 0 0 8px 0; font-size: 15px;">{update_title}</h3>
             <p style="color: #555; font-size: 13px; margin: 0;">{update_description}</p>
         </div>
         <p style="color: #555; font-size: 14px;">
             You may want to start a new consultation to get updated recommendations
             based on the latest data.
         </p>
-        <hr style="border: none; border-top: 1px solid #eee; margin: 24px 0;" />
-        <p style="color: #aaa; font-size: 11px;">
-            You received this because you subscribed after your consultation on "{session_title}".
-            <br/>
-            <a href="{unsubscribe_url}" style="color: #aaa;">Unsubscribe</a>
-        </p>
-    </div>
+    {_email_footer(unsubscribe_url)}
     """
 
-    text_body = f"""Hydraulic Filter Expert Platform
+    text_body = f"""{BRAND} — {vertical_display_name} Knowledge Update
 
 New data available: {update_title}
 
 {update_description}
 
-This may be relevant to your consultation: {session_title}
+Relevant to your consultation: {session_title}
 
 Unsubscribe: {unsubscribe_url}
+-- {BRAND}
 """
 
     return _send_email(email, subject, html_body, text_body)
